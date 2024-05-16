@@ -1,13 +1,13 @@
 use abi::{
-    async_trait::async_trait,
     pb::message::{Msg, Platfrom},
     tokio::time::timeout,
+    tonic::async_trait,
 };
 
 use crate::{Kind, Result};
 
 #[async_trait]
-pub trait MessageStream {
+pub trait MessageStream: 'static + Send + Sync {
     fn get_platfrom(&self) -> Platfrom;
 
     async fn next(&self) -> Result<Option<Msg>>;
