@@ -1,0 +1,6 @@
+[workspace]
+members = ["abi"]
+resolver = "2"
+
+[profile.dev]
+incremental = true

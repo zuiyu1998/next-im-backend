@@ -1,0 +1,31 @@
+syntax = "proto3";
+package message;
+
+message ChatMsg {
+    //客户端生成的id
+    string local_id = 1;
+    //服务端生成的id
+    string server_id = 2;
+    //服务端生成的序列号id
+    int64 seq_id = 3;
+    //服务端生成的时间
+    int64 create_at = 4;
+    //发送者id
+    int64 sender_id = 5;
+    //接受者id
+    int64 receiver_id = 6;
+    //消息类型
+    ChatMsgType msg_type = 7;
+    //消息内容
+    bytes content = 8;
+}
+
+enum ChatMsgType {
+    Text = 0;
+}
+
+message Msg {
+  oneof union {
+    ChatMsg chat_msg = 1;
+  }
+}
