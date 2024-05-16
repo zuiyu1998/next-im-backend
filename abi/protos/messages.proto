@@ -29,3 +29,25 @@ message Msg {
     ChatMsg chat_msg = 1;
   }
 }
+
+enum Platfrom {
+    Windows = 0;
+    Linux = 1;
+    Mac = 2;
+    Android = 3;
+    Ios = 4;
+    Web = 5;
+}
+
+message SendMsgRequest {
+  Msg msg = 1;
+}
+
+message SendMsgResponse {
+}
+
+service ConnectService {
+  rpc SendMessage(SendMsgRequest) returns (SendMsgResponse);
+  rpc SendMsgToUser(SendMsgRequest) returns (SendMsgResponse);
+  rpc SendGroupMsgToUser(SendMsgRequest) returns (SendMsgResponse);
+}
