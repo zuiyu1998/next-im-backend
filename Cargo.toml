@@ -1,5 +1,5 @@
 [workspace]
-members = ["abi", "connect"]
+members = ["abi", "client", "connect"]
 resolver = "2"
 
 [profile.dev]

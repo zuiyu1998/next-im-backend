@@ -24,6 +24,12 @@ pub struct TcpStream {
 }
 
 impl TcpStream {
+    pub fn new_platform(stream: TokioTcpStream, platform: Platfrom) -> Self {
+        let connect = Arc::new(Mutex::new(Framed::new(stream, LengthCodec::default())));
+
+        TcpStream { connect, platform }
+    }
+
     pub fn new(stream: TokioTcpStream) -> Self {
         let connect = Arc::new(Mutex::new(Framed::new(stream, LengthCodec::default())));
 
