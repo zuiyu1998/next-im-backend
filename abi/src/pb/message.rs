@@ -31,8 +31,12 @@ pub struct ChatMsg {
 #[derive(serde::Serialize, serde::Deserialize)]
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct UserControlMsg {}
+#[derive(serde::Serialize, serde::Deserialize)]
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Msg {
-    #[prost(oneof = "msg::Union", tags = "1")]
+    #[prost(oneof = "msg::Union", tags = "1, 2")]
     pub union: ::core::option::Option<msg::Union>,
 }
 /// Nested message and enum types in `Msg`.
@@ -43,13 +47,9 @@ pub mod msg {
     pub enum Union {
         #[prost(message, tag = "1")]
         ChatMsg(super::ChatMsg),
+        #[prost(message, tag = "2")]
+        UserControlMsg(super::UserControlMsg),
     }
-}
-#[allow(clippy::derive_partial_eq_without_eq)]
-#[derive(Clone, PartialEq, ::prost::Message)]
-pub struct SendMsgRequest {
-    #[prost(message, optional, tag = "1")]
-    pub msg: ::core::option::Option<Msg>,
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -119,15 +119,15 @@ impl Platfrom {
     }
 }
 /// Generated client implementations.
-pub mod connect_service_client {
+pub mod msg_service_client {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::http::Uri;
     use tonic::codegen::*;
     #[derive(Debug, Clone)]
-    pub struct ConnectServiceClient<T> {
+    pub struct MsgServiceClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl ConnectServiceClient<tonic::transport::Channel> {
+    impl MsgServiceClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -138,7 +138,7 @@ pub mod connect_service_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> ConnectServiceClient<T>
+    impl<T> MsgServiceClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
@@ -156,7 +156,7 @@ pub mod connect_service_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> ConnectServiceClient<InterceptedService<T, F>>
+        ) -> MsgServiceClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -169,7 +169,7 @@ pub mod connect_service_client {
             <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error:
                 Into<StdError> + Send + Sync,
         {
-            ConnectServiceClient::new(InterceptedService::new(inner, interceptor))
+            MsgServiceClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -202,9 +202,10 @@ pub mod connect_service_client {
             self.inner = self.inner.max_encoding_message_size(limit);
             self
         }
+        /// 向chat 服务发送聊天消息
         pub async fn send_message(
             &mut self,
-            request: impl tonic::IntoRequest<super::SendMsgRequest>,
+            request: impl tonic::IntoRequest<super::ChatMsg>,
         ) -> std::result::Result<tonic::Response<super::SendMsgResponse>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
                 tonic::Status::new(
@@ -213,15 +214,16 @@ pub mod connect_service_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/message.ConnectService/SendMessage");
+            let path = http::uri::PathAndQuery::from_static("/message.MsgService/SendMessage");
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("message.ConnectService", "SendMessage"));
+                .insert(GrpcMethod::new("message.MsgService", "SendMessage"));
             self.inner.unary(req, path, codec).await
         }
+        /// 向用户发送消息
         pub async fn send_msg_to_user(
             &mut self,
-            request: impl tonic::IntoRequest<super::SendMsgRequest>,
+            request: impl tonic::IntoRequest<super::ChatMsg>,
         ) -> std::result::Result<tonic::Response<super::SendMsgResponse>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
                 tonic::Status::new(
@@ -230,16 +232,16 @@ pub mod connect_service_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path =
-                http::uri::PathAndQuery::from_static("/message.ConnectService/SendMsgToUser");
+            let path = http::uri::PathAndQuery::from_static("/message.MsgService/SendMsgToUser");
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("message.ConnectService", "SendMsgToUser"));
+                .insert(GrpcMethod::new("message.MsgService", "SendMsgToUser"));
             self.inner.unary(req, path, codec).await
         }
+        /// 向组发送消息
         pub async fn send_group_msg_to_user(
             &mut self,
-            request: impl tonic::IntoRequest<super::SendMsgRequest>,
+            request: impl tonic::IntoRequest<super::ChatMsg>,
         ) -> std::result::Result<tonic::Response<super::SendMsgResponse>, tonic::Status> {
             self.inner.ready().await.map_err(|e| {
                 tonic::Status::new(
@@ -249,38 +251,39 @@ pub mod connect_service_client {
             })?;
             let codec = tonic::codec::ProstCodec::default();
             let path =
-                http::uri::PathAndQuery::from_static("/message.ConnectService/SendGroupMsgToUser");
+                http::uri::PathAndQuery::from_static("/message.MsgService/SendGroupMsgToUser");
             let mut req = request.into_request();
-            req.extensions_mut().insert(GrpcMethod::new(
-                "message.ConnectService",
-                "SendGroupMsgToUser",
-            ));
+            req.extensions_mut()
+                .insert(GrpcMethod::new("message.MsgService", "SendGroupMsgToUser"));
             self.inner.unary(req, path, codec).await
         }
     }
 }
 /// Generated server implementations.
-pub mod connect_service_server {
+pub mod msg_service_server {
     #![allow(unused_variables, dead_code, missing_docs, clippy::let_unit_value)]
     use tonic::codegen::*;
-    /// Generated trait containing gRPC methods that should be implemented for use with ConnectServiceServer.
+    /// Generated trait containing gRPC methods that should be implemented for use with MsgServiceServer.
     #[async_trait]
-    pub trait ConnectService: Send + Sync + 'static {
+    pub trait MsgService: Send + Sync + 'static {
+        /// 向chat 服务发送聊天消息
         async fn send_message(
             &self,
-            request: tonic::Request<super::SendMsgRequest>,
+            request: tonic::Request<super::ChatMsg>,
         ) -> std::result::Result<tonic::Response<super::SendMsgResponse>, tonic::Status>;
+        /// 向用户发送消息
         async fn send_msg_to_user(
             &self,
-            request: tonic::Request<super::SendMsgRequest>,
+            request: tonic::Request<super::ChatMsg>,
         ) -> std::result::Result<tonic::Response<super::SendMsgResponse>, tonic::Status>;
+        /// 向组发送消息
         async fn send_group_msg_to_user(
             &self,
-            request: tonic::Request<super::SendMsgRequest>,
+            request: tonic::Request<super::ChatMsg>,
         ) -> std::result::Result<tonic::Response<super::SendMsgResponse>, tonic::Status>;
     }
     #[derive(Debug)]
-    pub struct ConnectServiceServer<T: ConnectService> {
+    pub struct MsgServiceServer<T: MsgService> {
         inner: _Inner<T>,
         accept_compression_encodings: EnabledCompressionEncodings,
         send_compression_encodings: EnabledCompressionEncodings,
@@ -288,7 +291,7 @@ pub mod connect_service_server {
         max_encoding_message_size: Option<usize>,
     }
     struct _Inner<T>(Arc<T>);
-    impl<T: ConnectService> ConnectServiceServer<T> {
+    impl<T: MsgService> MsgServiceServer<T> {
         pub fn new(inner: T) -> Self {
             Self::from_arc(Arc::new(inner))
         }
@@ -337,9 +340,9 @@ pub mod connect_service_server {
             self
         }
     }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for ConnectServiceServer<T>
+    impl<T, B> tonic::codegen::Service<http::Request<B>> for MsgServiceServer<T>
     where
-        T: ConnectService,
+        T: MsgService,
         B: Body + Send + 'static,
         B::Error: Into<StdError> + Send + 'static,
     {
@@ -355,19 +358,19 @@ pub mod connect_service_server {
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             let inner = self.inner.clone();
             match req.uri().path() {
-                "/message.ConnectService/SendMessage" => {
+                "/message.MsgService/SendMessage" => {
                     #[allow(non_camel_case_types)]
-                    struct SendMessageSvc<T: ConnectService>(pub Arc<T>);
-                    impl<T: ConnectService> tonic::server::UnaryService<super::SendMsgRequest> for SendMessageSvc<T> {
+                    struct SendMessageSvc<T: MsgService>(pub Arc<T>);
+                    impl<T: MsgService> tonic::server::UnaryService<super::ChatMsg> for SendMessageSvc<T> {
                         type Response = super::SendMsgResponse;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::SendMsgRequest>,
+                            request: tonic::Request<super::ChatMsg>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
-                                <T as ConnectService>::send_message(&inner, request).await
+                                <T as MsgService>::send_message(&inner, request).await
                             };
                             Box::pin(fut)
                         }
@@ -395,19 +398,19 @@ pub mod connect_service_server {
                     };
                     Box::pin(fut)
                 }
-                "/message.ConnectService/SendMsgToUser" => {
+                "/message.MsgService/SendMsgToUser" => {
                     #[allow(non_camel_case_types)]
-                    struct SendMsgToUserSvc<T: ConnectService>(pub Arc<T>);
-                    impl<T: ConnectService> tonic::server::UnaryService<super::SendMsgRequest> for SendMsgToUserSvc<T> {
+                    struct SendMsgToUserSvc<T: MsgService>(pub Arc<T>);
+                    impl<T: MsgService> tonic::server::UnaryService<super::ChatMsg> for SendMsgToUserSvc<T> {
                         type Response = super::SendMsgResponse;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::SendMsgRequest>,
+                            request: tonic::Request<super::ChatMsg>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
-                                <T as ConnectService>::send_msg_to_user(&inner, request).await
+                                <T as MsgService>::send_msg_to_user(&inner, request).await
                             };
                             Box::pin(fut)
                         }
@@ -435,21 +438,19 @@ pub mod connect_service_server {
                     };
                     Box::pin(fut)
                 }
-                "/message.ConnectService/SendGroupMsgToUser" => {
+                "/message.MsgService/SendGroupMsgToUser" => {
                     #[allow(non_camel_case_types)]
-                    struct SendGroupMsgToUserSvc<T: ConnectService>(pub Arc<T>);
-                    impl<T: ConnectService> tonic::server::UnaryService<super::SendMsgRequest>
-                        for SendGroupMsgToUserSvc<T>
-                    {
+                    struct SendGroupMsgToUserSvc<T: MsgService>(pub Arc<T>);
+                    impl<T: MsgService> tonic::server::UnaryService<super::ChatMsg> for SendGroupMsgToUserSvc<T> {
                         type Response = super::SendMsgResponse;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::SendMsgRequest>,
+                            request: tonic::Request<super::ChatMsg>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
-                                <T as ConnectService>::send_group_msg_to_user(&inner, request).await
+                                <T as MsgService>::send_group_msg_to_user(&inner, request).await
                             };
                             Box::pin(fut)
                         }
@@ -488,7 +489,7 @@ pub mod connect_service_server {
             }
         }
     }
-    impl<T: ConnectService> Clone for ConnectServiceServer<T> {
+    impl<T: MsgService> Clone for MsgServiceServer<T> {
         fn clone(&self) -> Self {
             let inner = self.inner.clone();
             Self {
@@ -500,7 +501,7 @@ pub mod connect_service_server {
             }
         }
     }
-    impl<T: ConnectService> Clone for _Inner<T> {
+    impl<T: MsgService> Clone for _Inner<T> {
         fn clone(&self) -> Self {
             Self(Arc::clone(&self.0))
         }
@@ -510,7 +511,7 @@ pub mod connect_service_server {
             write!(f, "{:?}", self.0)
         }
     }
-    impl<T: ConnectService> tonic::server::NamedService for ConnectServiceServer<T> {
-        const NAME: &'static str = "message.ConnectService";
+    impl<T: MsgService> tonic::server::NamedService for MsgServiceServer<T> {
+        const NAME: &'static str = "message.MsgService";
     }
 }

@@ -24,9 +24,14 @@ enum ChatMsgType {
     Text = 0;
 }
 
+message UserControlMsg {
+
+}
+
 message Msg {
   oneof union {
     ChatMsg chat_msg = 1;
+    UserControlMsg user_control_msg = 2;
   }
 }
 
@@ -40,15 +45,14 @@ enum Platfrom {
     Web = 6;
 }
 
-message SendMsgRequest {
-  Msg msg = 1;
-}
-
 message SendMsgResponse {
 }
 
-service ConnectService {
-  rpc SendMessage(SendMsgRequest) returns (SendMsgResponse);
-  rpc SendMsgToUser(SendMsgRequest) returns (SendMsgResponse);
-  rpc SendGroupMsgToUser(SendMsgRequest) returns (SendMsgResponse);
+service MsgService {
+  //向chat 服务发送聊天消息
+  rpc SendMessage(ChatMsg) returns (SendMsgResponse);
+  //向用户发送消息
+  rpc SendMsgToUser(ChatMsg) returns (SendMsgResponse);
+  //向组发送消息
+  rpc SendGroupMsgToUser(ChatMsg) returns (SendMsgResponse);
 }

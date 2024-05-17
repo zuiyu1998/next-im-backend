@@ -1,7 +1,6 @@
 use crate::manager::Manager;
 use abi::{
-    message::Message,
-    pb::message::{connect_service_server::ConnectService, SendMsgRequest, SendMsgResponse},
+    pb::message::{msg_service_server::MsgService, ChatMsg, SendMsgResponse},
     tonic::{async_trait, Request, Response, Status},
 };
 
@@ -10,15 +9,13 @@ pub struct ConnectRpcService {
 }
 
 #[async_trait]
-impl ConnectService for ConnectRpcService {
+impl MsgService for ConnectRpcService {
     async fn send_message(
         &self,
-        request: Request<SendMsgRequest>,
+        request: Request<ChatMsg>,
     ) -> Result<Response<SendMsgResponse>, Status> {
-        let _msg = request
-            .into_inner()
-            .msg
-            .ok_or_else(|| Status::invalid_argument("message is empty"))?;
+        let _msg = request.into_inner();
+
         // self.manager.broadcast(msg).await?;
         let response = Response::new(SendMsgResponse {});
         Ok(response)
@@ -26,18 +23,11 @@ impl ConnectService for ConnectRpcService {
 
     async fn send_msg_to_user(
         &self,
-        request: Request<SendMsgRequest>,
+        request: Request<ChatMsg>,
     ) -> Result<Response<SendMsgResponse>, Status> {
-        let msg = request
-            .into_inner()
-            .msg
-            .ok_or_else(|| Status::invalid_argument("message is empty"))?;
+        let msg = request.into_inner();
 
-        let id = msg
-            .get_sender_id()
-            .ok_or_else(|| Status::invalid_argument("message is invalid"))?;
-
-        self.manager.send_single_msg(&id, &msg).await;
+        self.manager.send_single_msg(&msg.sender_id, &msg).await;
 
         let response = Response::new(SendMsgResponse {});
         Ok(response)
@@ -45,18 +35,11 @@ impl ConnectService for ConnectRpcService {
 
     async fn send_group_msg_to_user(
         &self,
-        request: Request<SendMsgRequest>,
+        request: Request<ChatMsg>,
     ) -> Result<Response<SendMsgResponse>, Status> {
-        let msg = request
-            .into_inner()
-            .msg
-            .ok_or_else(|| Status::invalid_argument("message is empty"))?;
+        let _msg = request.into_inner();
 
-        let _id = msg
-            .get_sender_id()
-            .ok_or_else(|| Status::invalid_argument("message is invalid"))?;
-
-        // self.manager.send_group(&id, &msg).await;
+        // self.manager.send_group(&msg.sender_id, &msg).await;
 
         todo!()
     }

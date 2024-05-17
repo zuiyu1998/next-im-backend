@@ -15,7 +15,7 @@ impl BuilderExt for tonic_build::Builder {
 fn main() {
     tonic_build::configure()
         .out_dir("src/pb")
-        .with_serde(&["Msg", "union", "ChatMsg"])
+        .with_serde(&["Msg", "union", "ChatMsg", "UserControlMsg"])
         .compile(&["protos/messages.proto"], &["protos"])
         .unwrap();
 
