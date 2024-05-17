@@ -1,3 +1,4 @@
+pub mod message;
 pub mod pb;
 
 pub use bincode;

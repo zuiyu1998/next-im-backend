@@ -12,7 +12,7 @@ pub trait MessageStream: 'static + Send + Sync {
 
     async fn next(&self) -> Result<Option<Msg>>;
 
-    async fn send(&self, msg: Msg) -> Result<Option<Msg>>;
+    async fn send(&self, msg: &Msg) -> Result<Option<Msg>>;
 
     async fn next_ms(&self, ms: u64) -> Result<Option<Msg>> {
         let duration = std::time::Duration::from_millis(ms);

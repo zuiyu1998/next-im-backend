@@ -10,6 +10,7 @@ dependencies = [
  "dashmap",
  "prost",
  "prost-types",
+ "serde",
  "tokio",
  "tonic",
  "tonic-build",
