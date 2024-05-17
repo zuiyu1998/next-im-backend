@@ -1,4 +1,4 @@
-mod tcp;
+pub mod tcp;
 
 use crate::{
     pb::message::{Msg, Platfrom},

@@ -6,6 +6,7 @@ use crate::client::Client;
 
 pub type Hub = Arc<DashMap<UserId, Client>>;
 
+#[derive(Default)]
 pub struct Manager {
     pub hub: Hub,
 }

@@ -80,12 +80,13 @@ impl ChatMsgType {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
 pub enum Platfrom {
-    Windows = 0,
-    Linux = 1,
-    Mac = 2,
-    Android = 3,
-    Ios = 4,
-    Web = 5,
+    Unknow = 0,
+    Windows = 1,
+    Linux = 2,
+    Mac = 3,
+    Android = 4,
+    Ios = 5,
+    Web = 6,
 }
 impl Platfrom {
     /// String value of the enum field names used in the ProtoBuf definition.
@@ -94,6 +95,7 @@ impl Platfrom {
     /// (if the ProtoBuf definition does not change) and safe for programmatic use.
     pub fn as_str_name(&self) -> &'static str {
         match self {
+            Platfrom::Unknow => "Unknow",
             Platfrom::Windows => "Windows",
             Platfrom::Linux => "Linux",
             Platfrom::Mac => "Mac",
@@ -105,6 +107,7 @@ impl Platfrom {
     /// Creates an enum from field names used in the ProtoBuf definition.
     pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
         match value {
+            "Unknow" => Some(Self::Unknow),
             "Windows" => Some(Self::Windows),
             "Linux" => Some(Self::Linux),
             "Mac" => Some(Self::Mac),

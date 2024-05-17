@@ -31,12 +31,13 @@ message Msg {
 }
 
 enum Platfrom {
-    Windows = 0;
-    Linux = 1;
-    Mac = 2;
-    Android = 3;
-    Ios = 4;
-    Web = 5;
+    Unknow = 0;
+    Windows = 1;
+    Linux = 2;
+    Mac = 3;
+    Android = 4;
+    Ios = 5;
+    Web = 6;
 }
 
 message SendMsgRequest {
