@@ -1,10 +1,11 @@
-use abi::{
+mod tcp;
+
+use crate::{
     pb::message::{Msg, Platfrom},
     tokio::time::timeout,
     tonic::async_trait,
+    Kind, Result,
 };
-
-use crate::{Kind, Result};
 
 #[async_trait]
 pub trait MessageStream: 'static + Send + Sync {
@@ -12,7 +13,7 @@ pub trait MessageStream: 'static + Send + Sync {
 
     async fn next(&self) -> Result<Option<Msg>>;
 
-    async fn send(&self, msg: &Msg) -> Result<Option<Msg>>;
+    async fn send(&self, msg: &Msg) -> Result<()>;
 
     async fn next_ms(&self, ms: u64) -> Result<Option<Msg>> {
         let duration = std::time::Duration::from_millis(ms);

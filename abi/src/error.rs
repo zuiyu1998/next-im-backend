@@ -1,4 +1,4 @@
-use abi::bincode::Error as BincodeError;
+use bincode::Error as BincodeError;
 use thiserror::Error;
 
 #[derive(Debug, Error)]

@@ -1,8 +1,6 @@
 use std::collections::HashMap;
 
-use abi::{message::UserId, pb::message::Platfrom};
-
-use crate::stream::MessageStream;
+use abi::{message::UserId, pb::message::Platfrom, stream::MessageStream};
 
 pub struct Client {
     pub user_id: UserId,
