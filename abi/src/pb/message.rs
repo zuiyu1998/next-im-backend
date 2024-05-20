@@ -35,8 +35,44 @@ pub struct UserControlMsg {}
 #[derive(serde::Serialize, serde::Deserialize)]
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Ping {}
+#[derive(serde::Serialize, serde::Deserialize)]
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct Pong {}
+#[derive(serde::Serialize, serde::Deserialize)]
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct LoginRequest {
+    #[prost(string, tag = "1")]
+    pub email: ::prost::alloc::string::String,
+    #[prost(string, tag = "2")]
+    pub password: ::prost::alloc::string::String,
+    #[prost(enumeration = "Platfrom", tag = "3")]
+    pub platfrom: i32,
+}
+#[derive(serde::Serialize, serde::Deserialize)]
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct LoginResponse {}
+#[derive(serde::Serialize, serde::Deserialize)]
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct LogoutRequest {
+    #[prost(enumeration = "Platfrom", tag = "1")]
+    pub platfrom: i32,
+    #[prost(int64, tag = "2")]
+    pub user_id: i64,
+}
+#[derive(serde::Serialize, serde::Deserialize)]
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct LogoutResponse {}
+#[derive(serde::Serialize, serde::Deserialize)]
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Msg {
-    #[prost(oneof = "msg::Union", tags = "1, 2")]
+    #[prost(oneof = "msg::Union", tags = "1, 2, 3, 4, 5, 6, 7, 8")]
     pub union: ::core::option::Option<msg::Union>,
 }
 /// Nested message and enum types in `Msg`.
@@ -49,6 +85,18 @@ pub mod msg {
         ChatMsg(super::ChatMsg),
         #[prost(message, tag = "2")]
         UserControlMsg(super::UserControlMsg),
+        #[prost(message, tag = "3")]
+        Ping(super::Ping),
+        #[prost(message, tag = "4")]
+        Pong(super::Pong),
+        #[prost(message, tag = "5")]
+        Login(super::LoginRequest),
+        #[prost(message, tag = "6")]
+        LoginRes(super::LoginResponse),
+        #[prost(message, tag = "7")]
+        Logout(super::LogoutRequest),
+        #[prost(message, tag = "8")]
+        LogoutRes(super::LogoutResponse),
     }
 }
 #[allow(clippy::derive_partial_eq_without_eq)]
