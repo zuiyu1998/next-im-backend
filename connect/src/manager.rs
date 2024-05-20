@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use abi::{
     dashmap::DashMap,
-    pb::message::{msg::Union, ChatMsg, Msg},
+    pb::message::ChatMsg,
     tokio::{
         self,
         sync::mpsc::{self, Receiver, Sender},
@@ -16,14 +16,14 @@ use crate::client::Client;
 
 pub type Hub = Arc<DashMap<UserId, Client>>;
 
-pub type MsgSender = Sender<Msg>;
-pub type MsgReceiver = Receiver<Msg>;
+pub type ChatMsgSender = Sender<ChatMsg>;
+pub type ChatMsgReceiver = Receiver<ChatMsg>;
 
 #[derive(Clone)]
 pub struct Manager {
     pub hub: Hub,
     pub cache: Arc<dyn Cache>,
-    pub msg_sender: MsgSender,
+    pub chat_msg_sender: ChatMsgSender,
 }
 
 impl Manager {
@@ -33,7 +33,7 @@ impl Manager {
         let cache = get_cache();
 
         let manager = Manager {
-            msg_sender: sender,
+            chat_msg_sender: sender,
             cache,
             hub: Default::default(),
         };
@@ -47,19 +47,10 @@ impl Manager {
         manager
     }
 
-    pub async fn run(&mut self, mut receiver: MsgReceiver) {
+    pub async fn run(&mut self, mut receiver: ChatMsgReceiver) {
         loop {
             if let Ok(msg) = receiver.try_recv() {
-                let Msg { union } = msg;
-
-                if let Some(union) = union {
-                    match union {
-                        Union::ChatMsg(chat_msg) => {
-                            tracing::debug!("chat_msg: {:?}", chat_msg);
-                        }
-                        _ => {}
-                    }
-                }
+                tracing::debug!("chat_msg: {:?}", msg);
             }
         }
     }
