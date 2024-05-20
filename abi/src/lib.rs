@@ -1,4 +1,5 @@
 pub mod codec;
+pub mod config;
 pub mod error;
 pub mod pb;
 pub mod stream;
