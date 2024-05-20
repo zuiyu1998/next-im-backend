@@ -12,7 +12,7 @@ use std::error::Error;
 async fn main() -> Result<(), Box<dyn Error>> {
     tracing_subscriber::fmt().init();
 
-    let _manager = Manager::default();
+    let _manager = Manager::new().await;
 
     let addr = env::args()
         .nth(1)

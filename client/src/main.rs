@@ -44,6 +44,4 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .await?;
 
     loop {}
-
-    Ok(())
 }

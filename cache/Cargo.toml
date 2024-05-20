@@ -1,5 +1,5 @@
 [package]
-name = "connect"
+name = "cache"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,7 +7,3 @@ edition = "2021"
 
 [dependencies]
 abi = { path = "../abi" }
-cache = { path = "../cache" }
-
-
-thiserror = { version = "1.0" }
