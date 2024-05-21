@@ -84,7 +84,20 @@ impl Client {
         }
     }
 
-    pub async fn bind(&mut self) -> Result<()> {
+    pub async fn connect(
+        &mut self,
+        username: &str,
+        passworld: &str,
+        platform: Platfrom,
+    ) -> Result<()> {
+        self.bind().await?;
+
+        self.login(username, passworld, platform).await?;
+
+        Ok(())
+    }
+
+    async fn bind(&mut self) -> Result<()> {
         let socket = TcpSocket::new_v4()?;
 
         let stream = socket.connect(self.options.addr).await?;
@@ -99,12 +112,7 @@ impl Client {
         Ok(())
     }
 
-    pub async fn login(
-        &mut self,
-        username: &str,
-        passworld: &str,
-        platform: Platfrom,
-    ) -> Result<()> {
+    async fn login(&mut self, username: &str, passworld: &str, platform: Platfrom) -> Result<()> {
         assert_eq!(true, self.stream.is_some());
 
         let req = LoginRequest {

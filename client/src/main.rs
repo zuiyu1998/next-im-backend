@@ -1,4 +1,5 @@
 use abi::{
+    pb::message::Platfrom,
     tokio::{self},
     tracing_subscriber,
 };
@@ -18,7 +19,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .parse()
         .unwrap();
 
-    let client = Client::new(ClientOptions { addr });
+    let mut client = Client::new(ClientOptions { addr });
+
+    client.connect("lw", "123456", Platfrom::Windows).await?;
 
     client.run().await;
 
