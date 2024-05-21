@@ -6,7 +6,7 @@ use abi::{
     tracing,
 };
 
-use crate::{api::ApiMsgService, manager::Manager, Kind, Result};
+use crate::{manager::Manager, Kind, Result};
 
 pub struct Session {
     pub state: SessionState,

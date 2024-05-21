@@ -14,7 +14,7 @@ use abi::{
 use cache::{get_cache, Cache};
 
 use crate::{
-    api::{ApiMsgServiceInstance, HttpApiMsgService},
+    api::{ApiMsgService, HttpApiMsgService},
     client::Client,
 };
 
@@ -28,7 +28,7 @@ pub struct Manager {
     pub hub: Hub,
     pub cache: Arc<dyn Cache>,
     pub chat_msg_sender: ChatMsgSender,
-    pub api_msg_service_instace: ApiMsgServiceInstance,
+    pub api_msg_service_instace: Arc<Box<dyn ApiMsgService>>,
 }
 
 impl Manager {
@@ -53,7 +53,10 @@ impl Manager {
             chat_msg_sender: sender,
             cache,
             hub: Default::default(),
-            api_msg_service_instace: ApiMsgServiceInstance::new(HttpApiMsgService),
+            api_msg_service_instace: Arc::new(Box::new(HttpApiMsgService {
+                host: "test".to_string(),
+                port: 6234,
+            })),
         };
 
         let mut manager_clone = manager.clone();

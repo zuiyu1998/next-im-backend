@@ -1,7 +1,14 @@
 use super::ApiMsgService;
-use abi::{pb::message::LoginRequest, tonic::async_trait, UserId};
+use abi::{
+    pb::message::{LoginRequest, LogoutRequest},
+    tonic::async_trait,
+    UserId,
+};
 
-pub struct HttpApiMsgService;
+pub struct HttpApiMsgService {
+    pub host: String,
+    pub port: u16,
+}
 
 #[async_trait]
 impl ApiMsgService for HttpApiMsgService {
@@ -12,4 +19,6 @@ impl ApiMsgService for HttpApiMsgService {
             return Some(2);
         }
     }
+
+    async fn logout(&self, _logout: LogoutRequest) {}
 }
