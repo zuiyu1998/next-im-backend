@@ -1,8 +1,4 @@
-use abi::{
-    pb::message::Platfrom,
-    tokio::{self},
-    tracing_subscriber,
-};
+use abi::{pb::message::Platfrom, tokio, tracing::Level, tracing_subscriber};
 
 use client::{Client, ClientOptions};
 
@@ -11,7 +7,9 @@ use std::error::Error;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    tracing_subscriber::fmt().init();
+    tracing_subscriber::fmt()
+        .with_max_level(Level::DEBUG)
+        .init();
 
     let addr = env::args()
         .nth(1)

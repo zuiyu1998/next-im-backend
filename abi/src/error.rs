@@ -9,7 +9,7 @@ pub enum Kind {
 
 #[derive(Debug, Error)]
 pub enum Error {
-    #[error("connect error: {0}")]
+    #[error("kind: {0}")]
     Kind(#[from] Kind),
     #[error("io error: {0}")]
     IoError(#[from] std::io::Error),

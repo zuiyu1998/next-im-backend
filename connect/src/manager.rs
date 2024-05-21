@@ -1,8 +1,9 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use abi::{
     dashmap::DashMap,
     pb::message::ChatMsg,
+    stream::MessageStream,
     tokio::{
         self,
         sync::mpsc::{self, Receiver, Sender},
@@ -27,6 +28,18 @@ pub struct Manager {
 }
 
 impl Manager {
+    pub fn add_stream(&self, user_id: UserId, stream: Arc<dyn MessageStream>) {
+        if let Some(mut client) = self.hub.get_mut(&&user_id) {
+            client.streams.insert(stream.get_platfrom(), stream);
+        } else {
+            let mut streams = HashMap::default();
+
+            streams.insert(stream.get_platfrom(), stream);
+
+            self.hub.insert(user_id, Client { user_id, streams });
+        }
+    }
+
     pub async fn new() -> Self {
         let (sender, receiver) = mpsc::channel(1024);
 

@@ -11,7 +11,7 @@ pub enum Kind {
 
 #[derive(Debug, Error)]
 pub enum Error {
-    #[error("connect error: {0}")]
+    #[error("kind: {0}")]
     Kind(#[from] Kind),
     #[error("abi error: {0}")]
     AbiError(#[from] AbiError),

@@ -1,18 +1,21 @@
 use abi::{
-    stream::{tcp::TcpStream, MessageStream},
+    stream::tcp::TcpStream,
     tokio::{self, net::TcpListener},
-    tracing, tracing_subscriber,
+    tracing::{self, Level},
+    tracing_subscriber,
 };
-use connect::manager::Manager;
+use connect::{manager::Manager, session::Session};
 
 use std::env;
 use std::error::Error;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    tracing_subscriber::fmt().init();
+    tracing_subscriber::fmt()
+        .with_max_level(Level::DEBUG)
+        .init();
 
-    let _manager = Manager::new().await;
+    let manager = Manager::new().await;
 
     let addr = env::args()
         .nth(1)
@@ -25,25 +28,19 @@ async fn main() -> Result<(), Box<dyn Error>> {
     loop {
         let (stream, _) = listener.accept().await?;
 
+        let manager = manager.clone();
+
         // Spawn our handler to be run asynchronously.
         tokio::spawn(async move {
             //首次连接登录
             tracing::debug!("accepted connection");
 
-            let connect = TcpStream::new(stream);
+            let stream = TcpStream::new(stream);
 
-            match connect.next_ms(10000).await {
-                Ok(msg) => match msg {
-                    None => {
-                        tracing::error!("login msg error: not found");
-                    }
-                    Some(msg) => {
-                        tracing::info!("login msg: {:?}", msg);
-                    }
-                },
-                Err(e) => {
-                    tracing::error!("login msg error: {}", e);
-                }
+            let session = Session::new(stream);
+
+            if let Err(e) = session.run(manager).await {
+                tracing::error!("session error: {}", e);
             }
         });
     }
