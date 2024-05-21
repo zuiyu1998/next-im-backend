@@ -14,9 +14,9 @@ impl MsgService for ConnectRpcService {
         &self,
         request: Request<ChatMsg>,
     ) -> Result<Response<SendMsgResponse>, Status> {
-        let _msg = request.into_inner();
+        let msg = request.into_inner();
 
-        // self.manager.broadcast(msg).await?;
+        self.manager.broadcast(msg).await;
         let response = Response::new(SendMsgResponse {});
         Ok(response)
     }

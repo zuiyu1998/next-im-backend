@@ -89,4 +89,10 @@ impl Manager {
             }
         }
     }
+
+    pub async fn broadcast(&self, msg: ChatMsg) {
+        if let Err(e) = self.chat_msg_sender.send(msg).await {
+            tracing::error!("manager broadcast error: {}", e);
+        }
+    }
 }
