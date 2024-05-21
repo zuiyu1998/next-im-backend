@@ -66,6 +66,7 @@ pub mod login_response {
     #[repr(i32)]
     pub enum LoginResponseCode {
         Ok = 0,
+        NotFound = 1,
     }
     impl LoginResponseCode {
         /// String value of the enum field names used in the ProtoBuf definition.
@@ -75,12 +76,14 @@ pub mod login_response {
         pub fn as_str_name(&self) -> &'static str {
             match self {
                 LoginResponseCode::Ok => "Ok",
+                LoginResponseCode::NotFound => "NotFound",
             }
         }
         /// Creates an enum from field names used in the ProtoBuf definition.
         pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
             match value {
                 "Ok" => Some(Self::Ok),
+                "NotFound" => Some(Self::NotFound),
                 _ => None,
             }
         }

@@ -5,7 +5,7 @@ pub use error::*;
 use std::{net::SocketAddr, sync::Arc};
 
 use abi::{
-    pb::message::{msg::Union, LoginRequest, Msg, Platfrom},
+    pb::message::{login_response::LoginResponseCode, msg::Union, LoginRequest, Msg, Platfrom},
     stream::{tcp::TcpStream, MessageStream},
     tokio::{net::TcpSocket, sync::Mutex},
     tracing, UserId,
@@ -134,12 +134,24 @@ impl Client {
 
             match union {
                 Union::LoginRes(res) => {
-                    self.set_state(ClientState::Authed).await;
+                    let code: LoginResponseCode = res.code.try_into().unwrap();
 
-                    self.set_data(ClientData {
-                        user_id: res.user_id,
-                    })
-                    .await;
+                    match code {
+                        LoginResponseCode::Ok => {
+                            tracing::info!("user_id: {} login", res.user_id);
+
+                            self.set_state(ClientState::Authed).await;
+
+                            self.set_data(ClientData {
+                                user_id: res.user_id,
+                            })
+                            .await;
+                        }
+                        _ => {
+                            //todo 用户不存在
+                        }
+                    }
+
                     Ok(())
                 }
                 _ => Err(Kind::ServerError.into()),

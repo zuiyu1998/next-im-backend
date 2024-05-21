@@ -1,6 +1,8 @@
 mod client;
 mod error;
 
+pub mod api;
+
 pub mod session;
 
 pub mod manager;

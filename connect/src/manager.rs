@@ -13,7 +13,10 @@ use abi::{
 
 use cache::{get_cache, Cache};
 
-use crate::client::Client;
+use crate::{
+    api::{ApiMsgServiceInstance, HttpApiMsgService},
+    client::Client,
+};
 
 pub type Hub = Arc<DashMap<UserId, Client>>;
 
@@ -25,6 +28,7 @@ pub struct Manager {
     pub hub: Hub,
     pub cache: Arc<dyn Cache>,
     pub chat_msg_sender: ChatMsgSender,
+    pub api_msg_service_instace: ApiMsgServiceInstance,
 }
 
 impl Manager {
@@ -49,6 +53,7 @@ impl Manager {
             chat_msg_sender: sender,
             cache,
             hub: Default::default(),
+            api_msg_service_instace: ApiMsgServiceInstance::new(HttpApiMsgService),
         };
 
         let mut manager_clone = manager.clone();

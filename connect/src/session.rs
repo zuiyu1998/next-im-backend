@@ -6,7 +6,7 @@ use abi::{
     tracing,
 };
 
-use crate::{manager::Manager, Kind, Result};
+use crate::{api::ApiMsgService, manager::Manager, Kind, Result};
 
 pub struct Session {
     pub state: SessionState,
@@ -44,24 +44,35 @@ impl Session {
         let union = union.unwrap();
 
         match union {
-            Union::Login(_req) => {
-                //todo user_id
+            Union::Login(req) => {
+                let user_id = manager.api_msg_service_instace.login(req).await;
 
-                let user_id = 0;
+                if let Some(user_id) = user_id {
+                    tracing::info!("user_id: {} login", user_id);
+                    manager.add_stream(user_id, self.stream.clone());
 
-                tracing::info!("user_id: {} login", user_id);
-                manager.add_stream(user_id, self.stream.clone());
+                    let login_res = LoginResponse {
+                        code: LoginResponseCode::Ok as i32,
+                        user_id,
+                    };
 
-                let login_res = LoginResponse {
-                    code: LoginResponseCode::Ok as i32,
-                    user_id,
-                };
+                    self.stream
+                        .send(&Msg {
+                            union: Some(Union::LoginRes(login_res)),
+                        })
+                        .await?;
+                } else {
+                    let login_res = LoginResponse {
+                        code: LoginResponseCode::NotFound as i32,
+                        user_id: 0,
+                    };
 
-                self.stream
-                    .send(&Msg {
-                        union: Some(Union::LoginRes(login_res)),
-                    })
-                    .await?;
+                    self.stream
+                        .send(&Msg {
+                            union: Some(Union::LoginRes(login_res)),
+                        })
+                        .await?;
+                }
             }
             _ => {}
         }
