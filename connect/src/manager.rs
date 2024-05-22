@@ -69,10 +69,8 @@ impl Manager {
     }
 
     pub async fn run(&mut self, mut receiver: ChatMsgReceiver) {
-        loop {
-            if let Ok(msg) = receiver.try_recv() {
-                tracing::debug!("chat_msg: {:?}", msg);
-            }
+        while let Some(msg) = receiver.recv().await {
+            tracing::debug!("chat_msg: {:?}", msg);
         }
     }
 
