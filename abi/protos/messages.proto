@@ -7,7 +7,7 @@ message ChatMsg {
     //服务端生成的id
     string server_id = 2;
     //服务端时间
-    string server_at= 3;
+    int64 server_at= 3;
     //服务端生成的序列号id
     int64 seq_id = 4;
     //生成时间

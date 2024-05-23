@@ -9,3 +9,4 @@ edition = "2021"
 abi = { version = "0.1.0", path = "../abi" }
 
 synapse = { git = "https://github.com/Xu-Mj/synapse.git", branch = "main" }
+thiserror = { version = "1.0" }

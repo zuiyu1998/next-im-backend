@@ -21,6 +21,7 @@ futures = { version = "0.3" }
 thiserror = { version = "1.0" }
 chrono = { version = "0.4", features = ["serde"] }
 nanoid = { version = "0.4" }
+reqwest = { version = "0.12.2", features = ["json"] }
 
 [build-dependencies]
 tonic-build = "0.11.0"

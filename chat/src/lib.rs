@@ -1,16 +1,19 @@
 use abi::{
-    nanoid::{self, nanoid},
+    chrono,
+    nanoid::nanoid,
     pb::message::{chat_service_server::ChatService, ChatMsg, MsgResponse},
     tonic::{async_trait, Request, Response, Status},
     tracing,
 };
 use rdkafka::producer::{FutureProducer, FutureRecord};
+use std::time::Duration;
 
 pub struct ChatRpcService {
     kafka: FutureProducer,
     topic: String,
 }
 
+#[async_trait]
 impl ChatService for ChatRpcService {
     async fn send_message(
         &self,
@@ -35,15 +38,16 @@ impl ChatService for ChatRpcService {
         let err = match self.kafka.send(record, Duration::from_secs(0)).await {
             Ok(_) => String::new(),
             Err((err, msg)) => {
-                error!(
+                tracing::error!(
                     "send msg to kafka error: {:?}; owned message: {:?}",
-                    err, msg
+                    err,
+                    msg
                 );
                 err.to_string()
             }
         };
 
-        return Ok(tonic::Response::new(MsgResponse {
+        return Ok(Response::new(MsgResponse {
             local_id: msg.local_id,
             server_id: msg.server_id,
             server_at: msg.server_at,

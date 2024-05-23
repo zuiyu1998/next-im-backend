@@ -3,6 +3,7 @@ pub mod config;
 pub mod error;
 pub mod pb;
 pub mod stream;
+pub use reqwest;
 
 pub use bincode;
 pub use bytes;

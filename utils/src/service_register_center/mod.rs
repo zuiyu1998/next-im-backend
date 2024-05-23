@@ -1,3 +1,9 @@
+pub mod consul;
+
+use crate::Result;
+use abi::tonic::async_trait;
+use std::{collections::HashMap, fmt::Debug};
+
 //服务集合
 pub type Services = HashMap<String, Service>;
 
@@ -28,16 +34,17 @@ pub struct GrpcHealthCheck {
     pub interval: String,
 }
 
+#[async_trait]
 pub trait ServiceRegister: Send + Sync + Debug {
     /// 服务注册
-    async fn register(&self, registration: Registration) -> Result<(), Error>;
+    async fn register(&self, registration: Registration) -> Result<()>;
 
     /// 服务发现
-    async fn discovery(&self) -> Result<Services, Error>;
+    async fn discovery(&self) -> Result<Services>;
 
     /// 服务注销
-    async fn deregister(&self, service_id: &str) -> Result<(), Error>;
+    async fn deregister(&self, service_id: &str) -> Result<()>;
 
     /// 服务筛选
-    async fn filter_by_name(&self, name: &str) -> Result<Services, Error>;
+    async fn filter_by_name(&self, name: &str) -> Result<Services>;
 }

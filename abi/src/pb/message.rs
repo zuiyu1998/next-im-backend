@@ -10,8 +10,8 @@ pub struct ChatMsg {
     #[prost(string, tag = "2")]
     pub server_id: ::prost::alloc::string::String,
     /// 服务端时间
-    #[prost(string, tag = "3")]
-    pub server_at: ::prost::alloc::string::String,
+    #[prost(int64, tag = "3")]
+    pub server_at: i64,
     /// 服务端生成的序列号id
     #[prost(int64, tag = "4")]
     pub seq_id: i64,
