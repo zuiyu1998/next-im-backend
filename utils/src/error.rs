@@ -1,4 +1,4 @@
-use abi::reqwest::Error as ReqwestError;
+use abi::{reqwest::Error as ReqwestError, tonic::transport::Error as TonicError};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -14,6 +14,12 @@ pub enum Error {
 
     #[error("reqwest error: {0}")]
     ReqwestError(#[from] ReqwestError),
+
+    #[error("tonic error: {0}")]
+    TonicError(#[from] TonicError),
+
+    #[error("io error: {0}")]
+    IoError(#[from] std::io::Error),
 }
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;

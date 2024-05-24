@@ -13,3 +13,4 @@ thiserror = { version = "1.0" }
 serde = { version = "1", features = ["derive"] }
 http = "0.2.12"
 tower = "0.4.13"
+hostname = "0.4"
