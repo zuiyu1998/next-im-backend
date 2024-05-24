@@ -2207,9 +2207,11 @@ name = "utils"
 version = "0.1.0"
 dependencies = [
  "abi",
+ "http 0.2.12",
  "serde",
  "synapse",
  "thiserror",
+ "tower",
 ]
 
 [[package]]
