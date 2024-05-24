@@ -1,5 +1,5 @@
 use abi::{
-    config::Config,
+    config::{Config, FromConfig},
     stream::tcp::TcpStream,
     tokio::{self, net::TcpListener},
     tracing::{self, Level},
@@ -16,9 +16,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .with_max_level(Level::DEBUG)
         .init();
 
-    let manager = Manager::new().await;
-
     let config = Config::default();
+
+    let manager = Manager::from_config(&config).await?;
 
     let addr = env::args()
         .nth(1)

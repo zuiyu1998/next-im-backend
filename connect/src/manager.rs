@@ -1,21 +1,25 @@
 use std::{collections::HashMap, sync::Arc};
 
 use abi::{
+    config::{Config, FromConfig},
     dashmap::DashMap,
-    pb::message::ChatMsg,
+    pb::message::{chat_service_client::ChatServiceClient, ChatMsg},
     stream::MessageStream,
     tokio::{
         self,
         sync::mpsc::{self, Receiver, Sender},
     },
+    tonic::async_trait,
     tracing, UserId,
 };
 
 use cache::{get_cache, Cache};
+use utils::{helpers, service_discovery::LbWithServiceDiscovery};
 
 use crate::{
     api::{ApiMsgService, HttpApiMsgService},
     client::Client,
+    Error, Result,
 };
 
 pub type Hub = Arc<DashMap<UserId, Client>>;
@@ -29,6 +33,39 @@ pub struct Manager {
     pub cache: Arc<dyn Cache>,
     pub chat_msg_sender: ChatMsgSender,
     pub api_msg_service_instace: Arc<Box<dyn ApiMsgService>>,
+    pub chat_rpc: ChatServiceClient<LbWithServiceDiscovery>,
+}
+
+#[async_trait]
+impl FromConfig for Manager {
+    type Error = Error;
+
+    async fn from_config(config: &Config) -> Result<Self> {
+        let (sender, receiver) = mpsc::channel(1024);
+
+        let cache = get_cache();
+
+        let chat_rpc = helpers::get_rpc_client(config, "chat").await?;
+
+        let manager = Manager {
+            chat_msg_sender: sender,
+            cache,
+            hub: Default::default(),
+            api_msg_service_instace: Arc::new(Box::new(HttpApiMsgService {
+                host: "test".to_string(),
+                port: 6234,
+            })),
+            chat_rpc,
+        };
+
+        let mut manager_clone = manager.clone();
+
+        tokio::spawn(async move {
+            manager_clone.run(receiver).await;
+        });
+
+        Ok(manager)
+    }
 }
 
 impl Manager {
@@ -42,30 +79,6 @@ impl Manager {
 
             self.hub.insert(user_id, Client { user_id, streams });
         }
-    }
-
-    pub async fn new() -> Self {
-        let (sender, receiver) = mpsc::channel(1024);
-
-        let cache = get_cache();
-
-        let manager = Manager {
-            chat_msg_sender: sender,
-            cache,
-            hub: Default::default(),
-            api_msg_service_instace: Arc::new(Box::new(HttpApiMsgService {
-                host: "test".to_string(),
-                port: 6234,
-            })),
-        };
-
-        let mut manager_clone = manager.clone();
-
-        tokio::spawn(async move {
-            manager_clone.run(receiver).await;
-        });
-
-        manager
     }
 
     pub async fn run(&mut self, mut receiver: ChatMsgReceiver) {

@@ -105,8 +105,10 @@ pub struct GrpcHealthCheck {
 }
 
 #[async_trait]
-pub trait FromConfig {
-    async fn from_conifg(&self, conifg: &Config) -> Self;
+pub trait FromConfig: Sized {
+    type Error;
+
+    async fn from_config(config: &Config) -> Result<Self, Self::Error>;
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
