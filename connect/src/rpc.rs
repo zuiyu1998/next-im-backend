@@ -1,11 +1,52 @@
-use crate::manager::Manager;
+use crate::{manager::Manager, Result};
 use abi::{
-    pb::message::{msg_service_server::MsgService, ChatMsg, SendMsgResponse},
-    tonic::{async_trait, Request, Response, Status},
+    config::{Config, ServiceType},
+    pb::message::{
+        msg_service_server::{MsgService, MsgServiceServer},
+        ChatMsg, SendMsgResponse,
+    },
+    tonic::{async_trait, transport::Server, Request, Response, Status},
+    tracing,
+};
+
+use utils::{
+    helpers,
+    synapse::health::{HealthServer, HealthService},
 };
 
 pub struct ConnectRpcService {
     manager: Manager,
+}
+
+impl ConnectRpcService {
+    pub fn new(manager: Manager) -> Self {
+        Self { manager }
+    }
+
+    pub async fn start(manager: Manager, config: &Config) -> Result<()> {
+        // register service to service register center
+        helpers::register_service(config, ServiceType::Msg).await?;
+        tracing::info!("<connect> rpc service register to service register center");
+
+        // open health check
+        let health_service = HealthServer::new(HealthService::new());
+        tracing::info!("<connect> rpc service health check started");
+
+        let service = Self::new(manager);
+        let svc = MsgServiceServer::new(service);
+        tracing::info!(
+            "<connect> rpc service started at {}",
+            config.rpc.msg.rpc_server_url()
+        );
+
+        Server::builder()
+            .add_service(health_service)
+            .add_service(svc)
+            .serve(config.rpc.msg.rpc_server_url().parse().unwrap())
+            .await
+            .unwrap();
+        Ok(())
+    }
 }
 
 #[async_trait]

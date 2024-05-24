@@ -1,10 +1,11 @@
 use abi::{
+    config::Config,
     stream::tcp::TcpStream,
     tokio::{self, net::TcpListener},
     tracing::{self, Level},
     tracing_subscriber,
 };
-use connect::{manager::Manager, session::Session};
+use connect::{manager::Manager, rpc::ConnectRpcService, session::Session};
 
 use std::env;
 use std::error::Error;
@@ -17,6 +18,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let manager = Manager::new().await;
 
+    let config = Config::default();
+
     let addr = env::args()
         .nth(1)
         .unwrap_or_else(|| "127.0.0.1:6142".to_string());
@@ -24,6 +27,16 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let listener = TcpListener::bind(&addr).await?;
 
     tracing::info!("server running on {}", addr);
+
+    let config = config.clone();
+
+    let manager_clone = manager.clone();
+
+    tokio::spawn(async move {
+        if let Err(e) = ConnectRpcService::start(manager_clone, &config).await {
+            tracing::error!("connect rpc service start error: {}", e);
+        }
+    });
 
     loop {
         let (stream, _) = listener.accept().await?;

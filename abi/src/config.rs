@@ -21,7 +21,7 @@ pub struct ServiceCenterConfig {
 impl Default for ServiceCenterConfig {
     fn default() -> Self {
         Self {
-            host: "1227.0.0.1".to_owned(),
+            host: "127.0.0.1".to_owned(),
             port: 8500,
             protocol: "http".to_owned(),
             timeout: 5000,
@@ -36,6 +36,26 @@ pub struct RpcConfig {
     pub chat: RpcServerConfig,
     // pub db: RpcServerConfig,
     // pub pusher: RpcServerConfig,
+}
+
+impl RpcServerConfig {
+    #[inline]
+    pub fn rpc_server_url(&self) -> String {
+        format!("{}:{}", self.host, self.port)
+    }
+
+    #[inline]
+    pub fn url(&self, https: bool) -> String {
+        url(https, &self.host, self.port)
+    }
+}
+
+fn url(https: bool, host: &str, port: u16) -> String {
+    if https {
+        format!("https://{}:{}", host, port)
+    } else {
+        format!("http://{}:{}", host, port)
+    }
 }
 
 impl Default for RpcConfig {

@@ -1,4 +1,4 @@
-use abi::{reqwest::Error as ReqwestError, tonic::transport::Error as TonicError};
+use abi::reqwest::Error as ReqwestError;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -16,7 +16,7 @@ pub enum Error {
     ReqwestError(#[from] ReqwestError),
 
     #[error("tonic error: {0}")]
-    TonicError(#[from] TonicError),
+    TonicError(String),
 
     #[error("io error: {0}")]
     IoError(#[from] std::io::Error),

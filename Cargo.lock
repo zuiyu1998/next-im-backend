@@ -447,6 +447,7 @@ dependencies = [
  "abi",
  "cache",
  "thiserror",
+ "utils",
 ]
 
 [[package]]

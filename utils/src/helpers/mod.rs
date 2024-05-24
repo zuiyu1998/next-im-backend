@@ -38,11 +38,11 @@ pub async fn register_service(config: &Config, service_type: ServiceType) -> Res
         config.service_center.protocol, config.service_center.host, config.service_center.port
     );
     let endpoint = Endpoint::from_shared(addr)
-        .map_err(|e| Error::TonicError(e))?
+        .map_err(|e| Error::TonicError(e.to_string()))?
         .connect_timeout(Duration::from_secs(config.service_center.timeout));
     let mut client = ServiceRegistryClient::connect(endpoint)
         .await
-        .map_err(|e| Error::TonicError(e))?;
+        .map_err(|e| Error::TonicError(e.to_string()))?;
 
     let (scheme, name, host, port, tags) = match service_type {
         ServiceType::Chat => {
@@ -55,11 +55,11 @@ pub async fn register_service(config: &Config, service_type: ServiceType) -> Res
         }
 
         ServiceType::Msg => {
-            let scheme = Scheme::from(config.rpc.chat.protocol.as_str()) as i32;
-            let name = config.rpc.chat.name.clone();
-            let host = config.rpc.chat.host.clone();
-            let port = config.rpc.chat.port as i32;
-            let tags = config.rpc.chat.tags.clone();
+            let scheme = Scheme::from(config.rpc.msg.protocol.as_str()) as i32;
+            let name = config.rpc.msg.name.clone();
+            let host = config.rpc.msg.host.clone();
+            let port = config.rpc.msg.port as i32;
+            let tags = config.rpc.msg.tags.clone();
             (scheme, name, host, port, tags)
         }
 
