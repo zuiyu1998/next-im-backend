@@ -2,12 +2,14 @@ pub mod consul;
 
 use crate::Result;
 use abi::tonic::async_trait;
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, fmt::Debug};
 
 //服务集合
 pub type Services = HashMap<String, Service>;
 
 //服务
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Service {
     pub id: String,
     pub service: String,
@@ -18,6 +20,7 @@ pub struct Service {
 }
 
 //注册所需数据
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Registration {
     pub id: String,
     pub name: String,
@@ -27,6 +30,7 @@ pub struct Registration {
     pub check: Option<GrpcHealthCheck>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
 pub struct GrpcHealthCheck {
     pub name: String,
     pub grpc: String,

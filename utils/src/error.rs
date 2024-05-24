@@ -1,3 +1,4 @@
+use abi::reqwest::Error as ReqwestError;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -7,6 +8,12 @@ pub enum Kind {}
 pub enum Error {
     #[error("kind: {0}")]
     Kind(#[from] Kind),
+
+    #[error("internal server errors")]
+    InternalServer(String),
+
+    #[error("reqwest error: {0}")]
+    ReqwestError(#[from] ReqwestError),
 }
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
