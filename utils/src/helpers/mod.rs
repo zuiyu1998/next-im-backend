@@ -1,16 +1,24 @@
 use abi::{
     config::{Config, ServiceType},
-    tonic::transport::Endpoint,
+    tokio::{self, sync::mpsc::Sender},
+    tonic::transport::{Channel, Endpoint},
+    tracing,
 };
 
 use synapse::{
     health::HealthCheck,
-    service::{Scheme, ServiceInstance, ServiceRegistryClient},
+    service::{
+        client::ServiceClient, Scheme, ServiceInstance, ServiceRegistryClient, ServiceStatus,
+    },
 };
 
-use std::time::Duration;
+use tower::discover::Change;
 
-use crate::{Error, Result};
+use std::{net::SocketAddr, time::Duration};
+
+use crate::{
+    client_factory::ClientFactory, service_discovery::LbWithServiceDiscovery, Error, Result,
+};
 
 //获取host_name
 pub fn get_host_name() -> Result<String> {
@@ -88,4 +96,70 @@ pub async fn register_service(config: &Config, service_type: ServiceType) -> Res
     Ok(())
 }
 
-pub fn get_rpc_client() {}
+async fn get_channel(config: &Config, name: &str) -> Result<LbWithServiceDiscovery> {
+    let (channel, sender) = Channel::balance_channel::<SocketAddr>(1024);
+    get_channel_(config, name, sender).await?;
+    Ok(LbWithServiceDiscovery(channel))
+}
+
+async fn get_channel_(
+    config: &Config,
+    name: &str,
+    sender: Sender<Change<SocketAddr, Endpoint>>,
+) -> Result<(), Error> {
+    let mut client = ServiceClient::builder()
+        .server_host(config.service_center.host.clone())
+        .server_port(config.service_center.port)
+        .connect_timeout(Duration::from_secs(5))
+        .build()
+        .await
+        .map_err(|_| {
+            Error::InternalServer("Connect to service register center failed".to_string())
+        })?;
+
+    let name = name.to_string();
+    tokio::spawn(async move {
+        let mut stream = match client.subscribe(name).await {
+            Ok(stream) => stream,
+            Err(e) => {
+                tracing::error!("subscribe channel error: {:?}", e);
+                return;
+            }
+        };
+        while let Some(service) = stream.recv().await {
+            tracing::debug!("subscribe channel return: {:?}", service);
+            let addr = format!("{}:{}", service.address, service.port);
+            let socket_addr: SocketAddr = match addr.parse() {
+                Ok(sa) => sa,
+                Err(e) => {
+                    tracing::error!("parse address error:{:?}", e);
+                    continue;
+                }
+            };
+            let scheme = Scheme::from(service.scheme as u8);
+            let addr = format!("{}://{}", scheme, addr);
+            let change = if service.active == ServiceStatus::Up as i32 {
+                let endpoint = match Endpoint::from_shared(addr) {
+                    Ok(endpoint) => endpoint,
+                    Err(err) => {
+                        tracing::error!("parse address error:{:?}", err);
+                        continue;
+                    }
+                };
+                Change::Insert(socket_addr, endpoint)
+            } else {
+                Change::Remove(socket_addr)
+            };
+            if let Err(err) = sender.send(change).await {
+                tracing::error!("send channel error:{:?}", err);
+                break;
+            };
+        }
+    });
+    Ok(())
+}
+
+pub async fn get_rpc_client<T: ClientFactory>(config: &Config, service_name: &str) -> Result<T> {
+    let channel = get_channel(config, service_name).await?;
+    Ok(T::new_client(channel))
+}
