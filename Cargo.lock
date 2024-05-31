@@ -360,6 +360,8 @@ dependencies = [
  "abi",
  "rdkafka",
  "serde_json",
+ "synapse",
+ "utils",
 ]
 
 [[package]]

@@ -1,16 +1,126 @@
 use abi::{
     chrono,
+    config::{Config, ServiceType},
     nanoid::nanoid,
-    pb::message::{chat_service_server::ChatService, ChatMsg, MsgResponse},
-    tonic::{async_trait, Request, Response, Status},
+    pb::message::{
+        chat_service_server::{ChatService, ChatServiceServer},
+        ChatMsg, MsgResponse,
+    },
+    tonic::{async_trait, transport::Server, Request, Response, Status},
     tracing,
 };
-use rdkafka::producer::{FutureProducer, FutureRecord};
+use rdkafka::{
+    admin::{AdminClient, AdminOptions, NewTopic, TopicReplication},
+    client::DefaultClientContext,
+    error::KafkaError,
+    producer::{FutureProducer, FutureRecord},
+    ClientConfig,
+};
+use synapse::health::{HealthServer, HealthService};
+
 use std::time::Duration;
+use utils::helpers;
 
 pub struct ChatRpcService {
     kafka: FutureProducer,
     topic: String,
+}
+
+impl ChatRpcService {
+    pub fn new(kafka: FutureProducer, topic: String) -> Self {
+        Self { kafka, topic }
+    }
+
+    pub async fn start(config: &Config) {
+        let broker = config.kafka.hosts.join(",");
+
+        let producer: FutureProducer = ClientConfig::new()
+            .set("bootstrap.servers", &broker)
+            .set(
+                "message.timeout.ms",
+                config.kafka.producer.timeout.to_string(),
+            )
+            .set(
+                "socket.timeout.ms",
+                config.kafka.connect_timeout.to_string(),
+            )
+            .set("acks", config.kafka.producer.acks.clone())
+            // make sure the message is sent exactly once
+            .set("enable.idempotence", "true")
+            .set("retries", config.kafka.producer.max_retry.to_string())
+            .set(
+                "retry.backoff.ms",
+                config.kafka.producer.retry_interval.to_string(),
+            )
+            .create()
+            .expect("Producer creation error");
+
+        Self::ensure_topic_exists(&config.kafka.topic, &broker, config.kafka.connect_timeout)
+            .await
+            .expect("Topic creation error");
+
+        helpers::register_service(config, ServiceType::Chat)
+            .await
+            .expect("Service register error");
+
+        tracing::info!("<chat> rpc service register to service register center");
+
+        // health check
+        let health_service = HealthServer::new(HealthService::new());
+        tracing::info!("<chat> rpc service health check started");
+
+        let chat_rpc = Self::new(producer, config.kafka.topic.clone());
+        let service = ChatServiceServer::new(chat_rpc);
+        tracing::info!(
+            "<chat> rpc service started at {}",
+            config.rpc.chat.rpc_server_url()
+        );
+
+        Server::builder()
+            .add_service(health_service)
+            .add_service(service)
+            .serve(config.rpc.chat.rpc_server_url().parse().unwrap())
+            .await
+            .unwrap();
+    }
+
+    async fn ensure_topic_exists(
+        topic_name: &str,
+        brokers: &str,
+        timeout: u16,
+    ) -> Result<(), KafkaError> {
+        // Create Kafka AdminClient
+        let admin_client: AdminClient<DefaultClientContext> = ClientConfig::new()
+            .set("bootstrap.servers", brokers)
+            .set("socket.timeout.ms", timeout.to_string())
+            .create()?;
+
+        // create topic
+        let new_topics = [NewTopic {
+            name: topic_name,
+            num_partitions: 1,
+            replication: TopicReplication::Fixed(1),
+            config: vec![],
+        }];
+
+        // fixme not find the way to check topic exist
+        // so just create it and judge the error,
+        // but don't find the error type for topic exist
+        // and this way below can work well.
+        let options = AdminOptions::new();
+        admin_client.create_topics(&new_topics, &options).await?;
+        match admin_client.create_topics(&new_topics, &options).await {
+            Ok(_) => {
+                tracing::info!("Topic not exist; create '{}' ", topic_name);
+                Ok(())
+            }
+            Err(KafkaError::AdminOpCreation(_)) => {
+                println!("Topic '{}' already exists.", topic_name);
+                Ok(())
+            }
+            Err(err) => Err(err),
+        }
+    }
 }
 
 #[async_trait]

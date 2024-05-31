@@ -6,6 +6,65 @@ pub struct Config {
     pub service_center: ServiceCenterConfig,
 
     pub rpc: RpcConfig,
+
+    pub kafka: KafkaConfig,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct KafkaConfig {
+    pub hosts: Vec<String>,
+    pub topic: String,
+    pub connect_timeout: u16,
+    pub group: String,
+    pub producer: KafkaProducer,
+    pub consumer: KafkaConsumer,
+}
+
+impl Default for KafkaConfig {
+    fn default() -> Self {
+        KafkaConfig {
+            hosts: vec!["192.168.0.103:9092".to_string()],
+            topic: "next-chat".to_string(),
+            connect_timeout: 5000,
+            group: "chat".to_string(),
+            producer: KafkaProducer::default(),
+            consumer: KafkaConsumer::default(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct KafkaConsumer {
+    pub session_timeout: u16,
+    pub auto_offset_reset: String,
+}
+
+impl Default for KafkaConsumer {
+    fn default() -> Self {
+        KafkaConsumer {
+            session_timeout: 20000,
+            auto_offset_reset: "earliest".to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct KafkaProducer {
+    pub timeout: u16,
+    pub acks: String,
+    pub max_retry: u8,
+    pub retry_interval: u16,
+}
+
+impl Default for KafkaProducer {
+    fn default() -> Self {
+        KafkaProducer {
+            timeout: 3000,
+            acks: "all".to_string(),
+            max_retry: 3,
+            retry_interval: 1000,
+        }
+    }
 }
 
 //注册中心配置
