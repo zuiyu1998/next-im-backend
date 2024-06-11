@@ -453,6 +453,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "consumer"
+version = "0.1.0"
+
+[[package]]
 name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1678,6 +1682,15 @@ checksum = "317936bbbd05227752583946b9e66d7ce3b489f84e11a94a510b4437fef407d7"
 dependencies = [
  "core-foundation-sys",
  "libc",
+]
+
+[[package]]
+name = "seq"
+version = "0.1.0"
+dependencies = [
+ "abi",
+ "thiserror",
+ "utils",
 ]
 
 [[package]]
