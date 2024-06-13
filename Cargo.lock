@@ -360,6 +360,8 @@ dependencies = [
  "abi",
  "rdkafka",
  "serde_json",
+ "synapse",
+ "utils",
 ]
 
 [[package]]
@@ -449,6 +451,10 @@ dependencies = [
  "thiserror",
  "utils",
 ]
+
+[[package]]
+name = "consumer"
+version = "0.1.0"
 
 [[package]]
 name = "core-foundation"
@@ -1676,6 +1682,15 @@ checksum = "317936bbbd05227752583946b9e66d7ce3b489f84e11a94a510b4437fef407d7"
 dependencies = [
  "core-foundation-sys",
  "libc",
+]
+
+[[package]]
+name = "seq"
+version = "0.1.0"
+dependencies = [
+ "abi",
+ "thiserror",
+ "utils",
 ]
 
 [[package]]
