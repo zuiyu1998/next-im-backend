@@ -1,15 +1,14 @@
 use abi::{
     config::{Config, ServiceType},
+    synapse::{
+        health::HealthCheck,
+        service::{
+            client::ServiceClient, Scheme, ServiceInstance, ServiceRegistryClient, ServiceStatus,
+        },
+    },
     tokio::{self, sync::mpsc::Sender},
     tonic::transport::{Channel, Endpoint},
     tracing,
-};
-
-use synapse::{
-    health::HealthCheck,
-    service::{
-        client::ServiceClient, Scheme, ServiceInstance, ServiceRegistryClient, ServiceStatus,
-    },
 };
 
 use tower::discover::Change;

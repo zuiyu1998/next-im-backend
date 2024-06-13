@@ -16,6 +16,7 @@ dependencies = [
  "prost-types",
  "reqwest",
  "serde",
+ "synapse",
  "thiserror",
  "tokio",
  "tokio-util",
@@ -360,7 +361,6 @@ dependencies = [
  "abi",
  "rdkafka",
  "serde_json",
- "synapse",
  "utils",
 ]
 
@@ -493,6 +493,10 @@ dependencies = [
  "once_cell",
  "parking_lot_core",
 ]
+
+[[package]]
+name = "db"
+version = "0.1.0"
 
 [[package]]
 name = "dotenv"
@@ -2237,7 +2241,6 @@ dependencies = [
  "hostname",
  "http 0.2.12",
  "serde",
- "synapse",
  "thiserror",
  "tower",
 ]

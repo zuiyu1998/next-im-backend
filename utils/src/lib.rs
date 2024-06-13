@@ -9,5 +9,3 @@ pub mod helpers;
 pub mod error;
 
 pub use error::*;
-
-pub use synapse;

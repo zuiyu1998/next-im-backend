@@ -1,6 +1,14 @@
 syntax = "proto3";
 package message;
 
+
+service DbService {
+  ///读取序列号id
+  rpc ReadSequenceId(Sequence) returns (SequenceResponse);
+  ///存储序列号id
+  rpc StoreSequenceId(Sequence) returns (SequenceResponse);
+}
+
 message ChatMsg {
     //客户端生成的id
     string local_id = 1;

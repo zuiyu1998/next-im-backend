@@ -11,5 +11,3 @@ utils = { path = "../utils" }
 
 rdkafka = { version = "0.36.2", features = ["cmake-build"] }
 serde_json = { version = "1.0" }
-
-synapse = { git = "https://github.com/Xu-Mj/synapse.git", branch = "main" }

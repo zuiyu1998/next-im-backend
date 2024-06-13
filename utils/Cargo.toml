@@ -8,7 +8,6 @@ edition = "2021"
 [dependencies]
 abi = { version = "0.1.0", path = "../abi" }
 
-synapse = { git = "https://github.com/Xu-Mj/synapse.git", branch = "main" }
 thiserror = { version = "1.0" }
 serde = { version = "1", features = ["derive"] }
 http = "0.2.12"

@@ -5,14 +5,12 @@ use abi::{
         msg_service_server::{MsgService, MsgServiceServer},
         ChatMsg, SendMsgResponse,
     },
+    synapse::health::{HealthServer, HealthService},
     tonic::{async_trait, transport::Server, Request, Response, Status},
     tracing,
 };
 
-use utils::{
-    helpers,
-    synapse::health::{HealthServer, HealthService},
-};
+use utils::helpers;
 
 pub struct ConnectRpcService {
     manager: Manager,

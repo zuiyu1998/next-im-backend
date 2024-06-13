@@ -1,3 +1,4 @@
+use abi::synapse::health::{HealthServer, HealthService};
 use abi::{
     chrono,
     config::{Config, ServiceType},
@@ -16,7 +17,6 @@ use rdkafka::{
     producer::{FutureProducer, FutureRecord},
     ClientConfig,
 };
-use synapse::health::{HealthServer, HealthService};
 
 use std::time::Duration;
 use utils::helpers;
