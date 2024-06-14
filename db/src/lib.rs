@@ -1,14 +1,11 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+use std::sync::Arc;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+use database::SeqRepo;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+pub mod database;
+
+mod rpc;
+
+pub struct DbRpcService {
+    seq: Arc<dyn SeqRepo>,
 }
