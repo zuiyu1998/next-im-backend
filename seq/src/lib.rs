@@ -24,7 +24,7 @@ impl SeqRpcService {
 
             return Ok(seq_id);
         } else {
-            let mut session = Session::new(self.session_width);
+            let mut session = Session::new(sequence.clone(), self.session_width);
 
             let seq_id = session.get_sequence_id(&self.store).await?;
 

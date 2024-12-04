@@ -23,6 +23,8 @@ chrono = { version = "0.4", features = ["serde"] }
 nanoid = { version = "0.4" }
 reqwest = { version = "0.12.2", features = ["json"] }
 synapse = { git = "https://github.com/Xu-Mj/synapse.git", branch = "main" }
+async-trait = { version = "0.1" }
+sea-orm = { version = "1.1", features = ["runtime-tokio-native-tls", "sqlx-postgres"] }
 
 [build-dependencies]
 tonic-build = "0.11.0"

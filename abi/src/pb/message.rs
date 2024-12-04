@@ -139,6 +139,14 @@ pub mod msg {
         LogoutRes(super::LogoutResponse),
     }
 }
+#[allow(clippy::derive_partial_eq_without_eq)]
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct SequenceUpdate {
+    #[prost(message, optional, tag = "1")]
+    pub sequence: ::core::option::Option<Sequence>,
+    #[prost(int64, tag = "2")]
+    pub id: i64,
+}
 #[derive(Hash, Eq)]
 #[allow(clippy::derive_partial_eq_without_eq)]
 #[derive(Clone, PartialEq, ::prost::Message)]
@@ -367,7 +375,25 @@ pub mod db_service_client {
             self.inner.unary(req, path, codec).await
         }
         /// /存储序列号id
-        pub async fn store_sequence_id(
+        pub async fn update_sequence_id(
+            &mut self,
+            request: impl tonic::IntoRequest<super::SequenceUpdate>,
+        ) -> std::result::Result<tonic::Response<super::SequenceResponse>, tonic::Status> {
+            self.inner.ready().await.map_err(|e| {
+                tonic::Status::new(
+                    tonic::Code::Unknown,
+                    format!("Service was not ready: {}", e.into()),
+                )
+            })?;
+            let codec = tonic::codec::ProstCodec::default();
+            let path = http::uri::PathAndQuery::from_static("/message.DbService/UpdateSequenceId");
+            let mut req = request.into_request();
+            req.extensions_mut()
+                .insert(GrpcMethod::new("message.DbService", "UpdateSequenceId"));
+            self.inner.unary(req, path, codec).await
+        }
+        /// /新增序列号id
+        pub async fn create_sequence_id(
             &mut self,
             request: impl tonic::IntoRequest<super::Sequence>,
         ) -> std::result::Result<tonic::Response<super::SequenceResponse>, tonic::Status> {
@@ -378,10 +404,10 @@ pub mod db_service_client {
                 )
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/message.DbService/StoreSequenceId");
+            let path = http::uri::PathAndQuery::from_static("/message.DbService/CreateSequenceId");
             let mut req = request.into_request();
             req.extensions_mut()
-                .insert(GrpcMethod::new("message.DbService", "StoreSequenceId"));
+                .insert(GrpcMethod::new("message.DbService", "CreateSequenceId"));
             self.inner.unary(req, path, codec).await
         }
     }
@@ -748,7 +774,12 @@ pub mod db_service_server {
             request: tonic::Request<super::Sequence>,
         ) -> std::result::Result<tonic::Response<super::SequenceResponse>, tonic::Status>;
         /// /存储序列号id
-        async fn store_sequence_id(
+        async fn update_sequence_id(
+            &self,
+            request: tonic::Request<super::SequenceUpdate>,
+        ) -> std::result::Result<tonic::Response<super::SequenceResponse>, tonic::Status>;
+        /// /新增序列号id
+        async fn create_sequence_id(
             &self,
             request: tonic::Request<super::Sequence>,
         ) -> std::result::Result<tonic::Response<super::SequenceResponse>, tonic::Status>;
@@ -869,19 +900,19 @@ pub mod db_service_server {
                     };
                     Box::pin(fut)
                 }
-                "/message.DbService/StoreSequenceId" => {
+                "/message.DbService/UpdateSequenceId" => {
                     #[allow(non_camel_case_types)]
-                    struct StoreSequenceIdSvc<T: DbService>(pub Arc<T>);
-                    impl<T: DbService> tonic::server::UnaryService<super::Sequence> for StoreSequenceIdSvc<T> {
+                    struct UpdateSequenceIdSvc<T: DbService>(pub Arc<T>);
+                    impl<T: DbService> tonic::server::UnaryService<super::SequenceUpdate> for UpdateSequenceIdSvc<T> {
                         type Response = super::SequenceResponse;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                         fn call(
                             &mut self,
-                            request: tonic::Request<super::Sequence>,
+                            request: tonic::Request<super::SequenceUpdate>,
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
-                                <T as DbService>::store_sequence_id(&inner, request).await
+                                <T as DbService>::update_sequence_id(&inner, request).await
                             };
                             Box::pin(fut)
                         }
@@ -893,7 +924,47 @@ pub mod db_service_server {
                     let inner = self.inner.clone();
                     let fut = async move {
                         let inner = inner.0;
-                        let method = StoreSequenceIdSvc(inner);
+                        let method = UpdateSequenceIdSvc(inner);
+                        let codec = tonic::codec::ProstCodec::default();
+                        let mut grpc = tonic::server::Grpc::new(codec)
+                            .apply_compression_config(
+                                accept_compression_encodings,
+                                send_compression_encodings,
+                            )
+                            .apply_max_message_size_config(
+                                max_decoding_message_size,
+                                max_encoding_message_size,
+                            );
+                        let res = grpc.unary(method, req).await;
+                        Ok(res)
+                    };
+                    Box::pin(fut)
+                }
+                "/message.DbService/CreateSequenceId" => {
+                    #[allow(non_camel_case_types)]
+                    struct CreateSequenceIdSvc<T: DbService>(pub Arc<T>);
+                    impl<T: DbService> tonic::server::UnaryService<super::Sequence> for CreateSequenceIdSvc<T> {
+                        type Response = super::SequenceResponse;
+                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
+                        fn call(
+                            &mut self,
+                            request: tonic::Request<super::Sequence>,
+                        ) -> Self::Future {
+                            let inner = Arc::clone(&self.0);
+                            let fut = async move {
+                                <T as DbService>::create_sequence_id(&inner, request).await
+                            };
+                            Box::pin(fut)
+                        }
+                    }
+                    let accept_compression_encodings = self.accept_compression_encodings;
+                    let send_compression_encodings = self.send_compression_encodings;
+                    let max_decoding_message_size = self.max_decoding_message_size;
+                    let max_encoding_message_size = self.max_encoding_message_size;
+                    let inner = self.inner.clone();
+                    let fut = async move {
+                        let inner = inner.0;
+                        let method = CreateSequenceIdSvc(inner);
                         let codec = tonic::codec::ProstCodec::default();
                         let mut grpc = tonic::server::Grpc::new(codec)
                             .apply_compression_config(

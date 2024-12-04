@@ -1,5 +1,7 @@
 use std::sync::Arc;
 
+use abi::pb::message::Sequence;
+
 use crate::{store::StoreSequence, Result};
 
 pub struct Session {
@@ -7,6 +9,7 @@ pub struct Session {
     //同时并发数
     width: i64,
     next_max_seq_id: i64,
+    sequence: Sequence,
 }
 
 impl Session {
@@ -16,7 +19,9 @@ impl Session {
         if next_seq_id >= self.next_max_seq_id {
             let next_max_seq_id = self.next_max_seq_id(next_seq_id);
 
-            store.store_sequence_id(next_max_seq_id).await?;
+            store
+                .store_sequence_id(&self.sequence, next_max_seq_id)
+                .await?;
 
             self.next_max_seq_id = next_max_seq_id;
         }
@@ -26,11 +31,12 @@ impl Session {
         Ok(next_seq_id)
     }
 
-    pub fn new(width: i64) -> Self {
+    pub fn new(sequence: Sequence, width: i64) -> Self {
         Self {
             seq_id: 0,
             width,
             next_max_seq_id: 1,
+            sequence
         }
     }
 

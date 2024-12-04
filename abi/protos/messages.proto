@@ -6,7 +6,9 @@ service DbService {
   ///读取序列号id
   rpc ReadSequenceId(Sequence) returns (SequenceResponse);
   ///存储序列号id
-  rpc StoreSequenceId(Sequence) returns (SequenceResponse);
+  rpc UpdateSequenceId(SequenceUpdate) returns (SequenceResponse);
+  ///新增序列号id
+  rpc CreateSequenceId(Sequence) returns (SequenceResponse);
 }
 
 message ChatMsg {
@@ -96,6 +98,11 @@ enum Platfrom {
     Android = 4;
     Ios = 5;
     Web = 6;
+}
+
+message SequenceUpdate {
+  Sequence sequence = 1;
+  int64 id = 2;
 }
 
 message Sequence {
