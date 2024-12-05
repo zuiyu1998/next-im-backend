@@ -882,6 +882,8 @@ version = "0.1.0"
 dependencies = [
  "abi",
  "entity",
+ "migration",
+ "utils",
 ]
 
 [[package]]

@@ -8,3 +8,5 @@ edition = "2021"
 [dependencies]
 abi = { version = "0.1.0", path = "../abi" }
 entity = { version = "0.1.0", path = "../entity" }
+migration = { version = "0.1.0", path = "../migration" }
+utils = { path = "../utils" }

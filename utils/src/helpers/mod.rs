@@ -61,6 +61,14 @@ pub async fn register_service(config: &Config, service_type: ServiceType) -> Res
             let tags = config.rpc.msg.tags.clone();
             (scheme, name, host, port, tags)
         }
+        ServiceType::Db => {
+            let scheme = Scheme::from(config.rpc.db.protocol.as_str()) as i32;
+            let name = config.rpc.db.name.clone();
+            let host = config.rpc.db.host.clone();
+            let port = config.rpc.db.port as i32;
+            let tags = config.rpc.db.tags.clone();
+            (scheme, name, host, port, tags)
+        }
 
         ServiceType::All => todo!("ALL"),
     };

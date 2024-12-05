@@ -13,7 +13,7 @@ use entity::{
 
 #[derive(Debug)]
 pub struct SeqDb {
-    conn: DatabaseConnection,
+   pub(crate) conn: DatabaseConnection,
 }
 
 #[async_trait]

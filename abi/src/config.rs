@@ -8,6 +8,20 @@ pub struct Config {
     pub rpc: RpcConfig,
 
     pub kafka: KafkaConfig,
+    pub db: DbConfig,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct DbConfig {
+    pub databse_url: String,
+}
+
+impl Default for DbConfig {
+    fn default() -> Self {
+        DbConfig {
+            databse_url: "postgresql://postgres:bj123456@localhost/next-im-backend".to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -93,7 +107,7 @@ pub struct RpcConfig {
     pub health_check: bool,
     pub msg: RpcServerConfig,
     pub chat: RpcServerConfig,
-    // pub db: RpcServerConfig,
+    pub db: RpcServerConfig,
     // pub pusher: RpcServerConfig,
 }
 
@@ -143,6 +157,17 @@ impl Default for RpcConfig {
                     interval: 3000,
                 },
             },
+            db: RpcServerConfig {
+                protocol: "http".to_owned(),
+                port: 50004,
+                host: "127.0.0.1".to_owned(),
+                name: "db".to_owned(),
+                tags: vec!["db".to_owned(), "grpc".to_owned()],
+                grpc_health_check: GrpcHealthCheck {
+                    grpc_use_tls: false,
+                    interval: 3000,
+                },
+            },
         }
     }
 }
@@ -176,4 +201,5 @@ pub enum ServiceType {
     Chat,
     Msg,
     All,
+    Db,
 }
