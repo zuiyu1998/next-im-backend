@@ -20,5 +20,6 @@ pub use tracing;
 pub use tracing_subscriber;
 pub use synapse;
 pub use sea_orm;
+pub use redis;
 
 pub type UserId = i64;
