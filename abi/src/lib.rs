@@ -13,13 +13,13 @@ pub use dashmap;
 pub use error::*;
 pub use futures;
 pub use nanoid;
+pub use redis;
+pub use sea_orm;
+pub use synapse;
 pub use tokio;
 pub use tokio_util;
 pub use tonic;
 pub use tracing;
 pub use tracing_subscriber;
-pub use synapse;
-pub use sea_orm;
-pub use redis;
 
 pub type UserId = i64;

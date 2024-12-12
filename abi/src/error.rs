@@ -1,15 +1,15 @@
 use bincode::Error as BincodeError;
+use redis::RedisError;
+use sea_orm::DbErr;
 use thiserror::Error;
 use tonic::Status;
-use sea_orm::DbErr;
-use redis::RedisError;
 
 #[derive(Debug, Error)]
 pub enum Kind {
     #[error("timeout")]
     Timeout,
     #[error("seq not found")]
-    SeqNotFound
+    SeqNotFound,
 }
 
 #[derive(Debug, Error)]

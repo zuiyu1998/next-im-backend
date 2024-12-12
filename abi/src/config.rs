@@ -9,6 +9,26 @@ pub struct Config {
 
     pub kafka: KafkaConfig,
     pub db: DbConfig,
+    pub redis: RedisConfig
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct RedisConfig {
+    pub host: String,
+    pub port: u16,
+    pub seq_step: i32,
+}
+
+impl Default for RedisConfig {
+    fn default() -> Self {
+        RedisConfig { host: "127.0.0.1".to_string(), port: 6379, seq_step: 10000 }
+    }
+}
+
+impl RedisConfig {
+    pub fn url(&self) -> String {
+        format!("redis://{}:{}", self.host, self.port)
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -94,7 +114,7 @@ pub struct ServiceCenterConfig {
 impl Default for ServiceCenterConfig {
     fn default() -> Self {
         Self {
-            host: "127.0.0.1".to_owned(),
+            host: "192.168.0.104".to_owned(),
             port: 8500,
             protocol: "http".to_owned(),
             timeout: 5000,
