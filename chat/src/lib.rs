@@ -1,4 +1,4 @@
-use abi::synapse::health::{HealthServer, HealthService};
+use abi::utils::register_service;
 use abi::{
     chrono,
     config::{Config, ServiceType},
@@ -19,7 +19,6 @@ use rdkafka::{
 };
 
 use std::time::Duration;
-use utils::helpers;
 
 pub struct ChatRpcService {
     kafka: FutureProducer,
@@ -59,15 +58,8 @@ impl ChatRpcService {
             .await
             .expect("Topic creation error");
 
-        helpers::register_service(config, ServiceType::Chat)
-            .await
-            .expect("Service register error");
-
+        register_service(config, ServiceType::Chat);
         tracing::info!("<chat> rpc service register to service register center");
-
-        // health check
-        let health_service = HealthServer::new(HealthService::new());
-        tracing::info!("<chat> rpc service health check started");
 
         let chat_rpc = Self::new(producer, config.kafka.topic.clone());
         let service = ChatServiceServer::new(chat_rpc);
@@ -77,7 +69,6 @@ impl ChatRpcService {
         );
 
         Server::builder()
-            .add_service(health_service)
             .add_service(service)
             .serve(config.rpc.chat.rpc_server_url().parse().unwrap())
             .await

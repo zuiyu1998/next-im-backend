@@ -3,7 +3,7 @@ pub mod config;
 pub mod error;
 pub mod pb;
 pub mod stream;
-pub use reqwest;
+pub mod utils;
 
 pub use async_trait;
 pub use bincode;
@@ -14,8 +14,8 @@ pub use error::*;
 pub use futures;
 pub use nanoid;
 pub use redis;
+pub use reqwest;
 pub use sea_orm;
-pub use synapse;
 pub use tokio;
 pub use tokio_util;
 pub use tonic;

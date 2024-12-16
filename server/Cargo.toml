@@ -8,6 +8,5 @@ edition = "2021"
 [dependencies]
 abi = { path = "../abi" }
 cache = { path = "../cache" }
-utils = { path = "../utils" }
 
 thiserror = { version = "1.0" }

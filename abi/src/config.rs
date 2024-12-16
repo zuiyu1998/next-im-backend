@@ -9,7 +9,7 @@ pub struct Config {
 
     pub kafka: KafkaConfig,
     pub db: DbConfig,
-    pub redis: RedisConfig
+    pub redis: RedisConfig,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -21,7 +21,11 @@ pub struct RedisConfig {
 
 impl Default for RedisConfig {
     fn default() -> Self {
-        RedisConfig { host: "127.0.0.1".to_string(), port: 6379, seq_step: 10000 }
+        RedisConfig {
+            host: "127.0.0.1".to_string(),
+            port: 6379,
+            seq_step: 10000,
+        }
     }
 }
 
@@ -105,26 +109,29 @@ impl Default for KafkaProducer {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 
 pub struct ServiceCenterConfig {
-    pub host: String,
+    pub ip: String,
     pub port: u16,
-    pub protocol: String,
-    pub timeout: u64,
+    pub teant: String,
+}
+
+impl ServiceCenterConfig {
+    pub fn endpoint_addrs(&self) -> String {
+        format!("{}:{}", self.ip, self.port)
+    }
 }
 
 impl Default for ServiceCenterConfig {
     fn default() -> Self {
         Self {
-            host: "192.168.0.104".to_owned(),
+            ip: "192.168.0.104".to_owned(),
             port: 8500,
-            protocol: "http".to_owned(),
-            timeout: 5000,
+            teant: "next-im".to_owned(),
         }
     }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RpcConfig {
-    pub health_check: bool,
     pub msg: RpcServerConfig,
     pub chat: RpcServerConfig,
     pub db: RpcServerConfig,
@@ -134,59 +141,30 @@ pub struct RpcConfig {
 impl RpcServerConfig {
     #[inline]
     pub fn rpc_server_url(&self) -> String {
-        format!("{}:{}", self.host, self.port)
-    }
-
-    #[inline]
-    pub fn url(&self, https: bool) -> String {
-        url(https, &self.host, self.port)
-    }
-}
-
-fn url(https: bool, host: &str, port: u16) -> String {
-    if https {
-        format!("https://{}:{}", host, port)
-    } else {
-        format!("http://{}:{}", host, port)
+        format!("{}:{}", self.ip, self.port)
     }
 }
 
 impl Default for RpcConfig {
     fn default() -> Self {
         RpcConfig {
-            health_check: false,
             chat: RpcServerConfig {
-                protocol: "http".to_owned(),
                 port: 50003,
-                host: "127.0.0.1".to_owned(),
-                name: "chat".to_owned(),
-                tags: vec!["chat".to_owned(), "grpc".to_owned()],
-                grpc_health_check: GrpcHealthCheck {
-                    grpc_use_tls: false,
-                    interval: 3000,
-                },
+                ip: "127.0.0.1".to_owned(),
+                service_name: "chat".to_owned(),
+                group_name: "chat-group".to_owned(),
             },
             msg: RpcServerConfig {
-                protocol: "http".to_owned(),
                 port: 50002,
-                host: "127.0.0.1".to_owned(),
-                name: "msg".to_owned(),
-                tags: vec!["msg".to_owned(), "grpc".to_owned()],
-                grpc_health_check: GrpcHealthCheck {
-                    grpc_use_tls: false,
-                    interval: 3000,
-                },
+                ip: "127.0.0.1".to_owned(),
+                service_name: "msg".to_owned(),
+                group_name: "msg-group".to_owned(),
             },
             db: RpcServerConfig {
-                protocol: "http".to_owned(),
                 port: 50004,
-                host: "127.0.0.1".to_owned(),
-                name: "db".to_owned(),
-                tags: vec!["db".to_owned(), "grpc".to_owned()],
-                grpc_health_check: GrpcHealthCheck {
-                    grpc_use_tls: false,
-                    interval: 3000,
-                },
+                ip: "127.0.0.1".to_owned(),
+                service_name: "db".to_owned(),
+                group_name: "db-group".to_owned(),
             },
         }
     }
@@ -194,12 +172,10 @@ impl Default for RpcConfig {
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct RpcServerConfig {
-    pub protocol: String,
-    pub host: String,
-    pub port: u16,
-    pub name: String,
-    pub tags: Vec<String>,
-    pub grpc_health_check: GrpcHealthCheck,
+    pub ip: String,
+    pub port: u32,
+    pub service_name: String,
+    pub group_name: String,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
@@ -222,4 +198,19 @@ pub enum ServiceType {
     Msg,
     All,
     Db,
+}
+
+impl ServiceType {
+    pub fn get_rpc_config(&self, config: &Config) -> RpcServerConfig {
+        let rpc_config: RpcServerConfig = match self {
+            ServiceType::Chat => config.rpc.chat.clone(),
+
+            ServiceType::Msg => config.rpc.msg.clone(),
+            ServiceType::Db => config.rpc.db.clone(),
+
+            ServiceType::All => todo!("ALL"),
+        };
+
+        rpc_config
+    }
 }

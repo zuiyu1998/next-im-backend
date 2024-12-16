@@ -7,9 +7,9 @@ edition = "2021"
 
 [dependencies]
 tokio-util = { version = "0.7", features = ["codec"] }
-tonic = { version = "0.11.0", features = ["gzip"] }
-prost = "0.12"
-prost-types = "0.12.3"
+tonic = { version = "0.12"}
+prost = "0.13"
+prost-types = "0.13"
 tokio = { version = "1.37", features = ["full"] }
 dashmap = { version = "5.3" }
 tracing = { version = "0.1.40", features = ["log"] }
@@ -22,10 +22,14 @@ thiserror = { version = "1.0" }
 chrono = { version = "0.4", features = ["serde"] }
 nanoid = { version = "0.4" }
 reqwest = { version = "0.12.2", features = ["json"] }
-synapse = { git = "https://github.com/Xu-Mj/synapse.git", branch = "main" }
 async-trait = { version = "0.1" }
-sea-orm = { version = "1.1", features = ["runtime-tokio-native-tls", "sqlx-postgres"] }
+sea-orm = { version = "1.1", features = [
+    "runtime-tokio-native-tls",
+    "sqlx-postgres",
+] }
 redis = { version = "0.27", features = ["tokio-comp"] }
+nacos-tonic-discover = { git = "https://github.com/zuiyu1998/nacos_rust_client.git" }
+nacos_rust_client = { git = "https://github.com/zuiyu1998/nacos_rust_client.git" }
 
 [build-dependencies]
-tonic-build = "0.11.0"
+tonic-build = "0.12.0"

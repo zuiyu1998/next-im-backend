@@ -2,12 +2,12 @@ use abi::{
     config::{Config, ServiceType},
     pb::message::db_service_server::DbServiceServer,
     sea_orm::Database,
-    synapse::health::{HealthServer, HealthService},
     tonic::transport::Server,
-    tracing, Result,
+    tracing,
+    utils::register_service,
+    Result,
 };
 use std::sync::Arc;
-use utils::helpers;
 
 pub mod database;
 pub mod seq;
@@ -24,14 +24,8 @@ pub struct DbRpcService {
 
 impl DbRpcService {
     pub async fn start(config: &Config) -> Result<()> {
-        helpers::register_service(config, ServiceType::Chat)
-            .await
-            .expect("Service register error");
-
+        register_service(config, ServiceType::Chat);
         tracing::info!("<db> rpc service register to service register center");
-
-        let health_service = HealthServer::new(HealthService::new());
-        tracing::info!("<db> rpc service health check started");
 
         let connect = Database::connect(&config.db.databse_url).await?;
 
@@ -50,7 +44,6 @@ impl DbRpcService {
         );
 
         Server::builder()
-            .add_service(health_service)
             .add_service(service)
             .serve(config.rpc.chat.rpc_server_url().parse().unwrap())
             .await

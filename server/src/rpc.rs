@@ -5,12 +5,10 @@ use abi::{
         msg_service_server::{MsgService, MsgServiceServer},
         ChatMsg, SendMsgResponse,
     },
-    synapse::health::{HealthServer, HealthService},
     tonic::{async_trait, transport::Server, Request, Response, Status},
     tracing,
+    utils::register_service,
 };
-
-use utils::helpers;
 
 pub struct ConnectRpcService {
     manager: Manager,
@@ -23,12 +21,8 @@ impl ConnectRpcService {
 
     pub async fn start(manager: Manager, config: &Config) -> Result<()> {
         // register service to service register center
-        helpers::register_service(config, ServiceType::Msg).await?;
+        register_service(config, ServiceType::Msg);
         tracing::info!("<connect> rpc service register to service register center");
-
-        // open health check
-        let health_service = HealthServer::new(HealthService::new());
-        tracing::info!("<connect> rpc service health check started");
 
         let service = Self::new(manager);
         let svc = MsgServiceServer::new(service);
@@ -38,7 +32,6 @@ impl ConnectRpcService {
         );
 
         Server::builder()
-            .add_service(health_service)
             .add_service(svc)
             .serve(config.rpc.msg.rpc_server_url().parse().unwrap())
             .await

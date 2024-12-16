@@ -35,7 +35,7 @@ fn main() {
             "LogoutRequest",
         ])
         .with_hash_and_eq(&["Sequence"])
-        .compile(&["protos/messages.proto"], &["protos"])
+        .compile_protos(&["protos/messages.proto"], &["protos"])
         .unwrap();
 
     // execute cargo fmt command

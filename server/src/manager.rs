@@ -3,18 +3,19 @@ use std::{collections::HashMap, sync::Arc};
 use abi::{
     config::{Config, FromConfig},
     dashmap::DashMap,
-    pb::message::{chat_service_client::ChatServiceClient, ChatMsg},
+    pb::message::ChatMsg,
     stream::MessageStream,
     tokio::{
         self,
         sync::mpsc::{self, Receiver, Sender},
     },
     tonic::async_trait,
-    tracing, UserId,
+    tracing,
+    utils::{get_rpc_client, ChatServiceGrpcClient},
+    UserId,
 };
 
 use cache::{get_cache, Cache};
-use utils::{helpers, service_discovery::LbWithServiceDiscovery};
 
 use crate::{
     api::{ApiMsgService, HttpApiMsgService},
@@ -33,7 +34,7 @@ pub struct Manager {
     pub cache: Arc<dyn Cache>,
     pub chat_msg_sender: ChatMsgSender,
     pub api_msg_service_instace: Arc<Box<dyn ApiMsgService>>,
-    pub chat_rpc: ChatServiceClient<LbWithServiceDiscovery>,
+    pub chat_rpc: ChatServiceGrpcClient,
 }
 
 #[async_trait]
@@ -45,7 +46,7 @@ impl FromConfig for Manager {
 
         let cache = get_cache();
 
-        let chat_rpc = helpers::get_rpc_client(config, "chat").await?;
+        let chat_rpc = get_rpc_client(config).await?;
 
         let manager = Manager {
             chat_msg_sender: sender,
