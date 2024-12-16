@@ -24,7 +24,7 @@ pub struct DbRpcService {
 
 impl DbRpcService {
     pub async fn start(config: &Config) -> Result<()> {
-        register_service(config, ServiceType::Chat);
+        register_service(config, ServiceType::Db);
         tracing::info!("<db> rpc service register to service register center");
 
         let connect = Database::connect(&config.db.databse_url).await?;

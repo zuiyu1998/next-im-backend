@@ -123,8 +123,8 @@ impl ServiceCenterConfig {
 impl Default for ServiceCenterConfig {
     fn default() -> Self {
         Self {
-            ip: "192.168.0.104".to_owned(),
-            port: 8500,
+            ip: "127.0.0.1".to_owned(),
+            port: 8848,
             teant: "next-im".to_owned(),
         }
     }
