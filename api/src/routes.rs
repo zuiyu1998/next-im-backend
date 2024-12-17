@@ -1,5 +1,6 @@
 use crate::state::AppState;
 use axum::{routing::post, Router};
+use tower_http::trace::TraceLayer;
 
 use crate::handlers::admin;
 use crate::handlers::users;
@@ -18,4 +19,5 @@ pub fn app_routes() -> RouterInstace {
     Router::new()
         .nest("/user", user_routes())
         .nest("/admin", admin_routes())
+        .layer(TraceLayer::new_for_http())
 }
