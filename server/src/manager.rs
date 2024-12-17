@@ -44,7 +44,7 @@ impl FromConfig for Manager {
     async fn from_config(config: &Config) -> Result<Self> {
         let (sender, receiver) = mpsc::channel(1024);
 
-        let cache = get_cache();
+        let cache = get_cache(&config);
 
         let chat_rpc = get_rpc_client(config).await?;
 
