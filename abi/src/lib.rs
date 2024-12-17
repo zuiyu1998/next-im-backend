@@ -4,6 +4,7 @@ pub mod error;
 pub mod pb;
 pub mod stream;
 pub mod utils;
+pub mod log;
 
 pub use async_trait;
 pub use bincode;

@@ -1,5 +1,25 @@
 use serde::{Deserialize, Serialize};
 use tonic::async_trait;
+use tracing::Level;
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+pub enum TraceLevel {
+    #[default]
+    Debug    
+}
+
+impl TraceLevel {
+    pub fn level(&self) -> Level {
+        match self {
+            TraceLevel::Debug => Level::DEBUG,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+pub struct LogConfig {
+   pub level: TraceLevel
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct Config {
@@ -9,6 +29,7 @@ pub struct Config {
     pub db: DbConfig,
     pub redis: RedisConfig,
     pub api: ApiConfig,
+    pub log: LogConfig,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
