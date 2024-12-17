@@ -7,7 +7,8 @@ edition = "2021"
 
 [dependencies]
 abi = { path = "../abi" }
-thiserror = { version = "1.0" }
+cache = { path = "../cache" }
 
+thiserror = { version = "1.0" }
 axum = { version = "0.7" }
 serde = { version = "1", features = ["derive"] }

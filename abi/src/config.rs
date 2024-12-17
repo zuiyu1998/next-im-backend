@@ -4,12 +4,32 @@ use tonic::async_trait;
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct Config {
     pub service_center: ServiceCenterConfig,
-
     pub rpc: RpcConfig,
-
     pub kafka: KafkaConfig,
     pub db: DbConfig,
     pub redis: RedisConfig,
+    pub api: ApiConfig,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ApiConfig {
+    pub host: String,
+    pub port: u16,
+}
+
+impl Default for ApiConfig {
+    fn default() -> Self {
+        ApiConfig {
+            host: "127.0.0.1".to_owned(),
+            port: 6143,
+        }
+    }
+}
+
+impl ApiConfig {
+    pub fn addr(&self) -> String {
+        format!("{}:{}", self.host, self.port)
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

@@ -1,8 +1,8 @@
+use abi::config::Config;
 use abi::tracing::Level;
 use abi::{tokio, tracing, tracing_subscriber};
 
 use abi::Result;
-use api::start;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -10,7 +10,9 @@ async fn main() -> Result<()> {
         .with_max_level(Level::DEBUG)
         .init();
 
-    if let Err(e) = start().await {
+    let config: Config = Config::default();
+
+    if let Err(e) = api::start(&config).await {
         tracing::error!("start error: {}", e);
     }
 
