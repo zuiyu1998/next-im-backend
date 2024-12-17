@@ -5,7 +5,7 @@ use tracing::Level;
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub enum TraceLevel {
     #[default]
-    Debug    
+    Debug,
 }
 
 impl TraceLevel {
@@ -18,7 +18,7 @@ impl TraceLevel {
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct LogConfig {
-   pub level: TraceLevel
+    pub level: TraceLevel,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]

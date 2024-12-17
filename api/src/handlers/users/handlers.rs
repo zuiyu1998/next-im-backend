@@ -1,18 +1,22 @@
-use abi::pb::message::{login_response::LoginResponseCode, LoginRequest, LoginResponse};
-use axum::Json;
+use axum::{extract::State, response::IntoResponse, Json};
 
-use crate::Result;
+use crate::{handlers::json_helper, state::AppState, ErrorKind, Result};
 
-pub async fn login(Json(req): Json<LoginRequest>) -> Result<Json<LoginResponse>> {
-    if req.username == "lw" {
-        return Ok(Json(LoginResponse {
-            code: LoginResponseCode::Ok as i32,
-            user_id: 1,
-        }));
-    } else {
-        return Ok(Json(LoginResponse {
-            code: LoginResponseCode::Ok as i32,
-            user_id: 2,
-        }));
+use super::model::UserTokenReq;
+
+pub async fn login(
+    State(state): State<AppState>,
+    Json(req): Json<UserTokenReq>,
+) -> Result<impl IntoResponse> {
+    let token = state
+        .cache
+        .get_user_token(req.id)
+        .await?
+        .ok_or(ErrorKind::UserTokenNotFound)?;
+
+    if token != req.token {
+        return Err(ErrorKind::UserTokenInvaild.into());
     }
+
+    Ok(json_helper(()))
 }
