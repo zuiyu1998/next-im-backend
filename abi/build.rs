@@ -33,6 +33,7 @@ fn main() {
             "LoginResponse",
             "LogoutResponse",
             "LogoutRequest",
+            "MsgRoute",
         ])
         .with_hash_and_eq(&["Sequence"])
         .compile_protos(&["protos/messages.proto"], &["protos"])

@@ -1,3 +1,4 @@
+use abi::pb::message::{MsgRoute, MsgRouteType};
 use axum::{extract::State, response::IntoResponse, Json};
 
 use crate::{handlers::json_helper, state::AppState, ErrorKind, Result};
@@ -18,5 +19,12 @@ pub async fn login(
         return Err(ErrorKind::UserTokenInvaild.into());
     }
 
-    Ok(json_helper(()))
+    let addr = state.config.msg_server.addr();
+
+    let route = MsgRoute {
+        route_type: MsgRouteType::Tcp as i32,
+        addr,
+    };
+
+    Ok(json_helper(route))
 }

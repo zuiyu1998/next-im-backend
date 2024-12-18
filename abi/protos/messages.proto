@@ -1,6 +1,14 @@
 syntax = "proto3";
 package message;
 
+enum MsgRouteType {
+  Tcp = 0;
+}
+
+message MsgRoute {
+  string addr = 1;
+  MsgRouteType route_type = 2;
+}
 
 service DbService {
   ///读取序列号id

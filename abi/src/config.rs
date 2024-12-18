@@ -30,6 +30,28 @@ pub struct Config {
     pub redis: RedisConfig,
     pub api: ApiConfig,
     pub log: LogConfig,
+    pub msg_server: MsgServerConfig,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct MsgServerConfig {
+    pub host: String,
+    pub port: u16,
+}
+
+impl Default for MsgServerConfig {
+    fn default() -> Self {
+        MsgServerConfig {
+            host: "127.0.0.1".to_owned(),
+            port: 6142,
+        }
+    }
+}
+
+impl MsgServerConfig {
+    pub fn addr(&self) -> String {
+        format!("{}:{}", self.host, self.port)
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

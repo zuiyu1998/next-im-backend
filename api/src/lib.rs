@@ -4,7 +4,7 @@ mod state;
 
 pub mod error;
 
-use std::net::SocketAddr;
+use std::{net::SocketAddr, sync::Arc};
 
 use abi::{config::Config, tokio, tracing};
 use cache::get_cache;
@@ -15,7 +15,10 @@ use crate::routes::app_routes;
 
 pub async fn start(config: &Config) -> Result<()> {
     let cache = get_cache(config);
-    let app_state = AppState { cache };
+    let app_state = AppState {
+        cache,
+        config: Arc::new(config.clone()),
+    };
 
     let app = app_routes().with_state(app_state);
 
