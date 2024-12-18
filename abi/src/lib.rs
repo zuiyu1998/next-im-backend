@@ -3,7 +3,7 @@ pub mod config;
 pub mod error;
 pub mod log;
 pub mod pb;
-pub mod stream;
+pub mod message;
 pub mod utils;
 
 pub use async_trait;

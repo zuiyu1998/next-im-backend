@@ -4,18 +4,24 @@ use sea_orm::DbErr;
 use thiserror::Error;
 use tonic::Status;
 
+use crate::message::IpVersion;
+
 #[derive(Debug, Error)]
-pub enum Kind {
+pub enum ErrorKind {
     #[error("timeout")]
     Timeout,
     #[error("seq not found")]
     SeqNotFound,
+    #[error("invalid protocol: {0}")]
+    InvalidProtocol(String),
+    #[error("no dns record found")]
+    NoDnsRecordFound(IpVersion),
 }
 
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("kind: {0}")]
-    Kind(#[from] Kind),
+    Kind(#[from] ErrorKind),
     #[error("io error: {0}")]
     IoError(#[from] std::io::Error),
     #[error("io error: {0}")]

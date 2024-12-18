@@ -15,13 +15,16 @@ dependencies = [
  "nacos-tonic-discover",
  "nacos_rust_client",
  "nanoid",
+ "network-interface",
  "prost",
  "prost-types",
+ "rand",
  "redis",
  "reqwest 0.12.9",
  "sea-orm",
  "serde",
  "serde_json",
+ "socket2",
  "thiserror",
  "tokio",
  "tokio-util 0.7.13",
@@ -29,6 +32,8 @@ dependencies = [
  "tonic-build",
  "tracing",
  "tracing-subscriber",
+ "url",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -2091,6 +2096,18 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "tempfile",
+]
+
+[[package]]
+name = "network-interface"
+version = "2.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "433419f898328beca4f2c6c73a1b52540658d92b0a99f0269330457e0fd998d5"
+dependencies = [
+ "cc",
+ "libc",
+ "thiserror",
+ "winapi",
 ]
 
 [[package]]
