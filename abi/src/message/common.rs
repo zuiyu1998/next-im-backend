@@ -1,10 +1,61 @@
-use std::net::{IpAddr, SocketAddr};
+use std::{
+    future::Future,
+    net::{IpAddr, SocketAddr},
+};
 
+use futures::{stream::FuturesUnordered, StreamExt};
 use network_interface::NetworkInterfaceConfig;
 use url::Url;
 
 use super::{platform, IpVersion};
 use crate::{Error, ErrorKind, Result};
+
+pub fn build_url_from_socket_addr(addr: &String, scheme: &str) -> url::Url {
+    if let Ok(sock_addr) = addr.parse::<SocketAddr>() {
+        let mut ret_url = url::Url::parse(format!("{}://0.0.0.0", scheme).as_str()).unwrap();
+        ret_url.set_ip_host(sock_addr.ip()).unwrap();
+        ret_url.set_port(Some(sock_addr.port())).unwrap();
+        ret_url
+    } else {
+        url::Url::parse(format!("{}://{}", scheme, addr).as_str()).unwrap()
+    }
+}
+
+pub(crate) fn check_scheme_and_get_socket_addr_ext<T>(
+    url: &url::Url,
+    scheme: &str,
+    ip_version: IpVersion,
+) -> Result<T, Error>
+where
+    T: FromUrl,
+{
+    if url.scheme() != scheme {
+        return Err(ErrorKind::InvalidProtocol(url.scheme().to_string()).into());
+    }
+
+    Ok(T::from_url(url.clone(), ip_version)?)
+}
+
+pub(crate) async fn wait_for_connect_futures<Fut, Ret, E>(
+    mut futures: FuturesUnordered<Fut>,
+) -> Result<Ret, Error>
+where
+    Fut: Future<Output = Result<Ret, E>> + Send + Sync,
+    E: std::error::Error + Into<Error> + Send + Sync + 'static,
+{
+    // return last error
+    let mut last_err = None;
+
+    while let Some(ret) = futures.next().await {
+        if let Err(e) = ret {
+            last_err = Some(e.into());
+        } else {
+            return ret.map_err(|e| e.into());
+        }
+    }
+
+    Err(last_err.unwrap_or(ErrorKind::Shutdown.into()))
+}
 
 pub(crate) fn get_interface_name_by_ip(local_ip: &IpAddr) -> Option<String> {
     if local_ip.is_unspecified() || local_ip.is_multicast() {

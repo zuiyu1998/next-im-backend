@@ -16,6 +16,8 @@ pub enum ErrorKind {
     InvalidProtocol(String),
     #[error("no dns record found")]
     NoDnsRecordFound(IpVersion),
+    #[error("Shutdown")]
+    Shutdown
 }
 
 #[derive(Debug, Error)]
