@@ -3,15 +3,24 @@ use nacos_rust_client::client::{
     ClientBuilder, NamingClient,
 };
 use nacos_tonic_discover::TonicDiscoverFactory;
+use url::Url;
 
 use crate::{
     config::{Config, ServiceType},
-    pb::message::chat_service_client::ChatServiceClient,
+    pb::message::{chat_service_client::ChatServiceClient, MsgRoute, MsgRouteType},
     tonic::transport::Channel,
     Error, Result,
 };
 
 pub type ChatServiceGrpcClient = ChatServiceClient<Channel>;
+
+pub fn msg_route_to_url(route: MsgRoute) -> Url {
+   let route_type: MsgRouteType = MsgRouteType::try_from(route.route_type).unwrap();
+   
+    match route_type {
+        MsgRouteType::Tcp => Url::parse(&format!("tcp://{}", route.addr)).unwrap(),
+    }
+}
 
 pub trait GrpcClient {
     fn get_service_type() -> ServiceType;

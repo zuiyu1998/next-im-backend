@@ -1,5 +1,6 @@
 use abi::Error as AbiError;
 use thiserror::Error;
+use abi::reqwest::Error as ReqwestError;
 
 #[derive(Debug, Error)]
 pub enum Kind {
@@ -17,6 +18,8 @@ pub enum Error {
     AbiError(#[from] AbiError),
     #[error("io error: {0}")]
     IoError(#[from] std::io::Error),
+    #[error("reqwest error: {0}")]
+    ReqwestError(#[from] ReqwestError),
 }
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;

@@ -1,7 +1,7 @@
 use crate::seq::SeqRepo;
 use abi::{
     async_trait::async_trait,
-    error::Kind,
+    error::ErrorKind,
     pb::message::Sequence,
     sea_orm::{EntityTrait, QueryFilter},
     Result,
@@ -25,7 +25,7 @@ impl SeqRepo for SeqDb {
             .filter(SeqColumn::SenderId.eq(sequence.sender_id))
             .filter(SeqColumn::ReceiverId.eq(sequence.receiver_id));
 
-        let model = sql.one(&self.conn).await?.ok_or(Kind::SeqNotFound)?;
+        let model = sql.one(&self.conn).await?.ok_or(ErrorKind::SeqNotFound)?;
 
         Ok(model.seq_id)
     }

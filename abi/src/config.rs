@@ -52,6 +52,10 @@ impl MsgServerConfig {
     pub fn addr(&self) -> String {
         format!("{}:{}", self.host, self.port)
     }
+
+    pub fn http(&self) -> String {
+        format!("http://{}:{}", self.host, self.port)
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

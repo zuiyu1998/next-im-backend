@@ -1,27 +1,17 @@
-use abi::{pb::message::Platfrom, tokio, tracing::Level, tracing_subscriber};
+use abi::{config::Config, log::tracing_subscriber_init, tokio};
+use client::Client;
 
-use client::{Client, ClientOptions};
-
-use std::env;
 use std::error::Error;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    tracing_subscriber::fmt()
-        .with_max_level(Level::DEBUG)
-        .init();
+    let config = Config::default();
 
-    let addr = env::args()
-        .nth(1)
-        .unwrap_or_else(|| "127.0.0.1:6142".to_string())
-        .parse()
-        .unwrap();
+    tracing_subscriber_init(&config);
 
-    let mut client = Client::new(ClientOptions { addr });
+    let mut client = Client::from_config(&config);
 
-    client.connect("lw", "123456", Platfrom::Windows).await?;
-
-    client.run().await;
+    client.connect(1, "test").await?;
 
     Ok(())
 }

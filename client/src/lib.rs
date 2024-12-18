@@ -1,165 +1,56 @@
 mod error;
 
+use abi::{
+    config::{Config, MsgServerConfig},
+    message::{tcp::TcpMessageConnector, Message, MessageConnector},
+    pb::message::MsgRoute,
+    reqwest,
+    serde_json::json,
+    utils::msg_route_to_url,
+    UserId,
+};
 pub use error::*;
 
-use std::{net::SocketAddr, sync::Arc};
-
-use abi::{
-    pb::message::{login_response::LoginResponseCode, msg::Union, LoginRequest, Msg, Platfrom},
-    stream::{tcp::TcpStream, MessageStream},
-    tokio::{net::TcpSocket, sync::Mutex},
-    tracing, UserId,
-};
-
-#[derive(Default, Clone)]
-pub enum ClientState {
-    #[default]
-    None,
-    UnAuthed,
-    Authed,
-    NetWorkConnecting,
-}
-
-pub struct ClientOptions {
-    pub addr: SocketAddr,
-}
-
-pub struct ClientData {
-    pub user_id: UserId,
-}
-
-#[derive(Clone)]
 pub struct Client {
-    pub state: Arc<Mutex<ClientState>>,
-    pub stream: Option<Arc<dyn MessageStream>>,
-    pub data: Arc<Mutex<Option<ClientData>>>,
-    pub options: Arc<ClientOptions>,
+    config: MsgServerConfig,
 }
 
 impl Client {
-    pub async fn get_state(&self) -> ClientState {
-        let guard = self.state.lock().await;
-
-        guard.clone()
-    }
-
-    pub async fn set_state(&self, state: ClientState) {
-        let mut guard = self.state.lock().await;
-        *guard = state;
-    }
-
-    pub async fn set_data(&self, data: ClientData) {
-        let mut guard = self.data.lock().await;
-
-        *guard = Some(data)
-    }
-
-    fn set_stream(&mut self, stream: impl MessageStream) {
-        self.stream = Some(Arc::new(stream));
-    }
-
-    pub fn new(options: ClientOptions) -> Self {
-        Self {
-            state: Default::default(),
-            stream: Default::default(),
-            options: Arc::new(options),
-            data: Default::default(),
+    pub fn from_config(config: &Config) -> Self {
+        let msg_server_config = config.msg_server.clone();
+        Client {
+            config: msg_server_config,
         }
     }
 
-    pub async fn run(mut self) {
-        loop {
-            let state = self.get_state().await;
+    pub async fn login(&self, id: UserId, token: &str) -> Result<Box<dyn Message>> {
+        let client = reqwest::Client::new();
+        let json_value = json!({
+            "id": id,
+            "token": token
+        });
 
-            match state {
-                ClientState::None => {
-                    if let Err(e) = self.bind().await {
-                        tracing::error!("clinet bind error: {}", e);
-                    }
-                }
-
-                ClientState::UnAuthed => {}
-                _ => {}
-            }
-        }
-    }
-
-    pub async fn connect(
-        &mut self,
-        username: &str,
-        passworld: &str,
-        platform: Platfrom,
-    ) -> Result<()> {
-        self.bind().await?;
-
-        self.login(username, passworld, platform).await?;
-
-        Ok(())
-    }
-
-    async fn bind(&mut self) -> Result<()> {
-        let socket = TcpSocket::new_v4()?;
-
-        let stream = socket.connect(self.options.addr).await?;
-
-        tracing::info!("server running on {}", self.options.addr);
-
-        let stream = TcpStream::new(stream);
-
-        self.set_stream(stream);
-        self.set_state(ClientState::UnAuthed).await;
-
-        Ok(())
-    }
-
-    async fn login(&mut self, username: &str, passworld: &str, platform: Platfrom) -> Result<()> {
-        assert_eq!(true, self.stream.is_some());
-
-        let req = LoginRequest {
-            username: username.to_owned(),
-            password: passworld.to_owned(),
-            platfrom: platform as i32,
-        };
-
-        let stream = self.stream.clone().unwrap();
-
-        stream
-            .send(&Msg {
-                union: Some(Union::Login(req)),
-            })
+        let route: MsgRoute = client
+            .post(self.config.http())
+            .json(&json_value)
+            .send()
+            .await?
+            .json()
             .await?;
-        if let Some(msg) = stream.next_ms(1000).await? {
-            let Msg { union } = msg;
-            let union = union.unwrap();
 
-            match union {
-                Union::LoginRes(res) => {
-                    let code: LoginResponseCode = res.code.try_into().unwrap();
+        let mut connector = TcpMessageConnector::new(msg_route_to_url(route));
 
-                    match code {
-                        LoginResponseCode::Ok => {
-                            tracing::info!("user_id: {} login", res.user_id);
+        let message = connector.connect().await?;
+        Ok(message)
+    }
 
-                            self.set_state(ClientState::Authed).await;
+    pub async fn connect(&mut self, id: UserId, token: &str) -> Result<()> {
+        let message = self.login(id, token).await?;
 
-                            self.set_data(ClientData {
-                                user_id: res.user_id,
-                            })
-                            .await;
-                        }
-                        _ => {
-                            //todo 用户不存在
-                        }
-                    }
+        let (_stream, _slink) = message.split();
 
-                    Ok(())
-                }
-                _ => Err(Kind::ServerError.into()),
-            }
-        } else {
-            self.set_state(ClientState::None).await;
-
-            Err(Kind::ServerNotResponding.into())
+        loop {
+            //todo
         }
     }
 }
