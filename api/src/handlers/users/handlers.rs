@@ -2,11 +2,11 @@ use axum::{extract::State, response::IntoResponse, Json};
 
 use crate::{handlers::json_helper, state::AppState, ErrorKind, Result};
 
-use super::model::UserTokenReq;
+use super::model::UserLoginReq;
 
 pub async fn login(
     State(state): State<AppState>,
-    Json(req): Json<UserTokenReq>,
+    Json(req): Json<UserLoginReq>,
 ) -> Result<impl IntoResponse> {
     let token = state
         .cache
