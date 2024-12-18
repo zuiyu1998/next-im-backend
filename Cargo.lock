@@ -2010,6 +2010,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "msg-gateway"
+version = "0.1.0"
+dependencies = [
+ "abi",
+ "cache",
+ "thiserror",
+]
+
+[[package]]
 name = "multimap"
 version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3274,15 +3283,6 @@ dependencies = [
  "itoa 1.0.14",
  "ryu",
  "serde",
-]
-
-[[package]]
-name = "server"
-version = "0.1.0"
-dependencies = [
- "abi",
- "cache",
- "thiserror",
 ]
 
 [[package]]

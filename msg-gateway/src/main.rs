@@ -5,7 +5,7 @@ use abi::{
     tracing::{self, Level},
     tracing_subscriber,
 };
-use server::{manager::Manager, rpc::ConnectRpcService, session::Session};
+use msg_gateway::{manager::Manager, rpc::ConnectRpcService, session::Session};
 
 use std::env;
 use std::error::Error;
