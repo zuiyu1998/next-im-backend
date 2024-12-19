@@ -7,7 +7,7 @@ use futures::{stream::FuturesUnordered, StreamExt};
 use network_interface::NetworkInterfaceConfig;
 use url::Url;
 
-use super::{platform, IpVersion};
+use super::IpVersion;
 use crate::{Error, ErrorKind, Result};
 
 pub fn build_url_from_socket_addr(addr: &String, scheme: &str) -> url::Url {
@@ -81,6 +81,8 @@ pub(crate) fn setup_sokcet2_ext(
 ) -> Result<(), Error> {
     #[cfg(target_os = "windows")]
     {
+        use super::platform;
+
         let is_udp = matches!(socket2_socket.r#type()?, socket2::Type::DGRAM);
         platform::windows::setup_socket_for_win(socket2_socket, bind_addr, bind_dev, is_udp)?;
     }
