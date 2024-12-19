@@ -2,15 +2,19 @@ use abi::{bincode::Error as BincodeError, Error as AbiError};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
-pub enum Kind {
-    #[error("timeout")]
-    Timeout,
+pub enum ErrorKind {
+    #[error("MsgInvaild")]
+    MsgInvaild,
+    #[error("UseNotLogin")]
+    UseNotLogin,
+    #[error("UseTokenInvaild")]
+    UseTokenInvaild
 }
 
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("kind: {0}")]
-    Kind(#[from] Kind),
+    Kind(#[from] ErrorKind),
     #[error("io error: {0}")]
     IoError(#[from] std::io::Error),
     #[error("io error: {0}")]

@@ -3,7 +3,7 @@ mod error;
 use std::{sync::Arc, time::Duration};
 
 use abi::{
-    config::{Config, MsgServerConfig},
+    config::{ApiConfig, Config},
     message::{tcp::TcpMessageConnector, Message, MessageConnector, MessageSink},
     pb::{
         hepler::{ping, pong},
@@ -18,19 +18,17 @@ use abi::{
 };
 pub use error::*;
 
-pub const HEART_BEAT_INTERVAL: u64 = 30;
-
 #[derive(Clone)]
 pub struct Client {
-    config: MsgServerConfig,
+    config: ApiConfig,
     shard_sink: Option<Arc<RwLock<Box<dyn MessageSink>>>>,
 }
 
 impl Client {
     pub fn from_config(config: &Config) -> Self {
-        let msg_server_config = config.msg_server.clone();
+        let api_config = config.api.clone();
         Client {
-            config: msg_server_config,
+            config: api_config,
             shard_sink: None,
         }
     }
@@ -72,7 +70,7 @@ impl Client {
                     // break this task, it will end this conn
                     break;
                 }
-                tokio::time::sleep(Duration::from_secs(HEART_BEAT_INTERVAL)).await;
+                tokio::time::sleep(Duration::from_secs(30)).await;
             }
         });
 

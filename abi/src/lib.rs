@@ -2,8 +2,8 @@ pub mod codec;
 pub mod config;
 pub mod error;
 pub mod log;
-pub mod pb;
 pub mod message;
+pub mod pb;
 pub mod utils;
 
 pub use async_trait;

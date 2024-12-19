@@ -10,17 +10,16 @@ use abi::{
     utils::register_service,
 };
 
-pub struct ConnectRpcService {
+pub struct MsgRpcService {
     manager: Manager,
 }
 
-impl ConnectRpcService {
+impl MsgRpcService {
     pub fn new(manager: Manager) -> Self {
         Self { manager }
     }
 
     pub async fn start(manager: Manager, config: &Config) -> Result<()> {
-        // register service to service register center
         register_service(config, ServiceType::Msg);
         tracing::info!("<connect> rpc service register to service register center");
 
@@ -41,7 +40,7 @@ impl ConnectRpcService {
 }
 
 #[async_trait]
-impl MsgService for ConnectRpcService {
+impl MsgService for MsgRpcService {
     async fn send_message(
         &self,
         request: Request<ChatMsg>,

@@ -40,68 +40,26 @@ pub struct ChatMsg {
     pub chat_type: i32,
 }
 #[derive(serde::Serialize, serde::Deserialize, Clone, Copy, PartialEq, ::prost::Message)]
-pub struct UserControlMsg {}
-#[derive(serde::Serialize, serde::Deserialize, Clone, Copy, PartialEq, ::prost::Message)]
 pub struct Ping {}
 #[derive(serde::Serialize, serde::Deserialize, Clone, Copy, PartialEq, ::prost::Message)]
 pub struct Pong {}
 #[derive(serde::Serialize, serde::Deserialize, Clone, PartialEq, ::prost::Message)]
 pub struct LoginRequest {
-    #[prost(string, tag = "1")]
-    pub username: ::prost::alloc::string::String,
+    #[prost(int64, tag = "1")]
+    pub user_id: i64,
     #[prost(string, tag = "2")]
-    pub password: ::prost::alloc::string::String,
+    pub token: ::prost::alloc::string::String,
     #[prost(enumeration = "Platfrom", tag = "3")]
     pub platfrom: i32,
 }
-#[derive(serde::Serialize, serde::Deserialize, Clone, Copy, PartialEq, ::prost::Message)]
+#[derive(serde::Serialize, serde::Deserialize, Clone, PartialEq, ::prost::Message)]
 pub struct LoginResponse {
-    #[prost(enumeration = "login_response::LoginResponseCode", tag = "1")]
-    pub code: i32,
-    #[prost(int64, tag = "2")]
-    pub user_id: i64,
+    #[prost(string, tag = "2")]
+    pub error: ::prost::alloc::string::String,
 }
-/// Nested message and enum types in `LoginResponse`.
-pub mod login_response {
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
-    #[repr(i32)]
-    pub enum LoginResponseCode {
-        Ok = 0,
-        NotFound = 1,
-    }
-    impl LoginResponseCode {
-        /// String value of the enum field names used in the ProtoBuf definition.
-        ///
-        /// The values are not transformed in any way and thus are considered stable
-        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
-        pub fn as_str_name(&self) -> &'static str {
-            match self {
-                Self::Ok => "Ok",
-                Self::NotFound => "NotFound",
-            }
-        }
-        /// Creates an enum from field names used in the ProtoBuf definition.
-        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
-            match value {
-                "Ok" => Some(Self::Ok),
-                "NotFound" => Some(Self::NotFound),
-                _ => None,
-            }
-        }
-    }
-}
-#[derive(serde::Serialize, serde::Deserialize, Clone, Copy, PartialEq, ::prost::Message)]
-pub struct LogoutRequest {
-    #[prost(enumeration = "Platfrom", tag = "1")]
-    pub platfrom: i32,
-    #[prost(int64, tag = "2")]
-    pub user_id: i64,
-}
-#[derive(serde::Serialize, serde::Deserialize, Clone, Copy, PartialEq, ::prost::Message)]
-pub struct LogoutResponse {}
 #[derive(serde::Serialize, serde::Deserialize, Clone, PartialEq, ::prost::Message)]
 pub struct Msg {
-    #[prost(oneof = "msg::Union", tags = "1, 2, 3, 4, 5, 6, 7, 8")]
+    #[prost(oneof = "msg::Union", tags = "1, 2, 3, 4, 5")]
     pub union: ::core::option::Option<msg::Union>,
 }
 /// Nested message and enum types in `Msg`.
@@ -111,19 +69,13 @@ pub mod msg {
         #[prost(message, tag = "1")]
         ChatMsg(super::ChatMsg),
         #[prost(message, tag = "2")]
-        UserControlMsg(super::UserControlMsg),
-        #[prost(message, tag = "3")]
         Ping(super::Ping),
-        #[prost(message, tag = "4")]
+        #[prost(message, tag = "3")]
         Pong(super::Pong),
+        #[prost(message, tag = "4")]
+        LoginReq(super::LoginRequest),
         #[prost(message, tag = "5")]
-        Login(super::LoginRequest),
-        #[prost(message, tag = "6")]
         LoginRes(super::LoginResponse),
-        #[prost(message, tag = "7")]
-        Logout(super::LogoutRequest),
-        #[prost(message, tag = "8")]
-        LogoutRes(super::LogoutResponse),
     }
 }
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]

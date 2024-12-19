@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use tonic::async_trait;
 use tracing::Level;
+use url::Url;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub enum TraceLevel {
@@ -53,8 +54,8 @@ impl MsgServerConfig {
         format!("{}:{}", self.host, self.port)
     }
 
-    pub fn http(&self) -> String {
-        format!("http://{}:{}", self.host, self.port)
+    pub fn url(&self) -> Url {
+        Url::parse(&format!("tcp://{}:{}", self.host, self.port)).expect("url parse fail.")
     }
 }
 
@@ -76,6 +77,10 @@ impl Default for ApiConfig {
 impl ApiConfig {
     pub fn addr(&self) -> String {
         format!("{}:{}", self.host, self.port)
+    }
+
+    pub fn http(&self) -> String {
+        format!("http://{}:{}", self.host, self.port)
     }
 }
 

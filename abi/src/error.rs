@@ -17,7 +17,7 @@ pub enum ErrorKind {
     #[error("no dns record found")]
     NoDnsRecordFound(IpVersion),
     #[error("Shutdown")]
-    Shutdown
+    Shutdown,
 }
 
 #[derive(Debug, Error)]

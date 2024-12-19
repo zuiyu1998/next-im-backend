@@ -15,8 +15,8 @@ use crate::{
 pub type ChatServiceGrpcClient = ChatServiceClient<Channel>;
 
 pub fn msg_route_to_url(route: MsgRoute) -> Url {
-   let route_type: MsgRouteType = MsgRouteType::try_from(route.route_type).unwrap();
-   
+    let route_type: MsgRouteType = MsgRouteType::try_from(route.route_type).unwrap();
+
     match route_type {
         MsgRouteType::Tcp => Url::parse(&format!("tcp://{}", route.addr)).unwrap(),
     }

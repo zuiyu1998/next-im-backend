@@ -1,8 +1,8 @@
 use std::{collections::HashMap, sync::Arc};
 
-use abi::{pb::message::Platfrom, stream::MessageStream, UserId};
+use abi::{message::MessageSink, pb::message::Platfrom, tokio::sync::RwLock, UserId};
 
 pub struct Client {
     pub user_id: UserId,
-    pub streams: HashMap<Platfrom, Arc<dyn MessageStream>>,
+    pub sinks: HashMap<Platfrom, Arc<RwLock<Box<dyn MessageSink>>>>,
 }
