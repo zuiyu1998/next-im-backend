@@ -1,6 +1,9 @@
 mod error;
 
-use std::{sync::Arc, time::Duration};
+use std::{
+    sync::{Arc, OnceLock, Mutex},
+    time::Duration,
+};
 
 use abi::{
     config::{ApiConfig, Config},
@@ -17,6 +20,24 @@ use abi::{
     UserId,
 };
 pub use error::*;
+
+static CLIENT: OnceLock<Mutex<Client>> = OnceLock::new();
+
+pub struct IMClient;
+
+impl IMClient {
+    pub fn from_config(config: &Config) {
+        let client = Client::from_config(config);
+        let _ = CLIENT.set(Mutex::new(client));
+    }
+  
+    pub async fn connect(&mut self, id: UserId, token: &str) -> Result<()> {
+       let mut guard = CLIENT.get().unwrap().lock().unwrap();
+       guard.connect(id, token).await?;
+
+       Ok(())
+    }
+}
 
 #[derive(Clone)]
 pub struct Client {

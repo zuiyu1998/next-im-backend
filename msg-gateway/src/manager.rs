@@ -45,6 +45,8 @@ impl Manager {
         mut stream: Box<dyn MessageStream>,
         sink: Box<dyn MessageSink>,
     ) {
+        tracing::debug!("start client: user_id-{}, platform-{}", user_id, platform.as_str_name());
+
         let shard_sink = Arc::new(RwLock::new(sink));
 
         self.add_sink(user_id, platform, shard_sink.clone());
