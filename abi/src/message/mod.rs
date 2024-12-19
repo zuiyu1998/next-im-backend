@@ -5,7 +5,6 @@ pub mod tcp;
 
 use std::{
     net::SocketAddr,
-    pin::Pin,
     sync::{Arc, Mutex},
 };
 
@@ -44,12 +43,12 @@ impl<R, W> MessageWrapper<R, W> {
 impl<R, W> Message for MessageWrapper<R, W>
 where
     R: MessageStream + Send + 'static,
-    W: MessageSlink + Send + 'static,
+    W: MessageSink + Send + 'static,
 {
-    fn split(&self) -> (Pin<Box<dyn MessageStream>>, Pin<Box<dyn MessageSlink>>) {
+    fn split(&self) -> (Box<dyn MessageStream>, Box<dyn MessageSink>) {
         let reader = self.reader.lock().unwrap().take().unwrap();
         let writer = self.writer.lock().unwrap().take().unwrap();
-        (Box::pin(reader), Box::pin(writer))
+        (Box::new(reader), Box::new(writer))
     }
 
     fn info(&self) -> MessageInfo {
@@ -65,7 +64,7 @@ pub struct MessageInfo {
 }
 
 pub trait Message: Send {
-    fn split(&self) -> (Pin<Box<dyn MessageStream>>, Pin<Box<dyn MessageSlink>>);
+    fn split(&self) -> (Box<dyn MessageStream>, Box<dyn MessageSink>);
 
     fn info(&self) -> MessageInfo;
 }
@@ -87,7 +86,7 @@ pub trait MessageConnector: Send {
 }
 
 #[async_trait]
-pub trait MessageSlink: 'static + Send + Sync {
+pub trait MessageSink: 'static + Send + Sync {
     async fn send_msg(&mut self, msg: &Msg) -> Result<()>;
 
     async fn send_chat_msg(&mut self, msg: &ChatMsg) -> Result<()> {

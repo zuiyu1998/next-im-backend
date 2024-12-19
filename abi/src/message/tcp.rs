@@ -23,7 +23,7 @@ use super::{
         build_url_from_socket_addr, check_scheme_and_get_socket_addr,
         check_scheme_and_get_socket_addr_ext, setup_sokcet2, wait_for_connect_futures,
     },
-    IpVersion, Message, MessageInfo, MessageListener, MessageSlink, MessageStream, MessageWrapper,
+    IpVersion, Message, MessageInfo, MessageListener, MessageSink, MessageStream, MessageWrapper,
 };
 
 fn get_tunnel_with_tcp_stream(stream: TcpStream, remote_url: url::Url) -> Result<Box<dyn Message>> {
@@ -140,7 +140,7 @@ impl MessageStream for FramedRead<OwnedReadHalf, LengthCodec> {
 }
 
 #[async_trait]
-impl MessageSlink for FramedWrite<OwnedWriteHalf, LengthCodec> {
+impl MessageSink for FramedWrite<OwnedWriteHalf, LengthCodec> {
     async fn send_msg(&mut self, msg: &Msg) -> Result<()> {
         let data = bincode::serialize(msg)?;
         let bytes = Bytes::copy_from_slice(&data);
