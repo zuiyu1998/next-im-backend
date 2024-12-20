@@ -6,7 +6,7 @@ use abi::{
     message::{Message, MessageSink, MessageStream},
     pb::{
         hepler::{login_res, ping, pong},
-        message::{msg::Union, ChatMsg, Msg, Platfrom},
+        message::{msg::Union, ChatMsg, LoginRequest, Msg, Platfrom},
     },
     tokio::{
         self,
@@ -45,7 +45,11 @@ impl Manager {
         mut stream: Box<dyn MessageStream>,
         sink: Box<dyn MessageSink>,
     ) {
-        tracing::debug!("start client: user_id-{}, platform-{}", user_id, platform.as_str_name());
+        tracing::debug!(
+            "start client: user_id-{}, platform-{}",
+            user_id,
+            platform.as_str_name()
+        );
 
         let shard_sink = Arc::new(RwLock::new(sink));
 
@@ -55,7 +59,7 @@ impl Manager {
         let mut ping_task = tokio::spawn(async move {
             loop {
                 if let Err(e) = cloned_tx.write().await.send_msg(&ping()).await {
-                    tracing::error!("send ping error：{:?}", e);
+                    tracing::error!("send ping error: {:?}", e);
                     break;
                 }
                 tokio::time::sleep(Duration::from_secs(30)).await;
@@ -106,9 +110,11 @@ impl Manager {
         }
     }
 
-    pub async fn handle_message(&mut self, message: Box<dyn Message>) -> Result<()> {
-        let (mut stream, mut sink) = message.split();
-
+    pub async fn verify(
+        &mut self,
+        stream: &mut Box<dyn MessageStream>,
+        sink: &mut Box<dyn MessageSink>,
+    ) -> Result<LoginRequest> {
         if let Some(Msg {
             union: Some(Union::LoginReq(req)),
         }) = stream.next_ms(1500).await?
@@ -120,15 +126,7 @@ impl Manager {
                     return Err(e.into());
                 }
 
-                self.start_client(
-                    req.user_id,
-                    Platfrom::try_from(req.platfrom).unwrap(),
-                    stream,
-                    sink,
-                )
-                .await;
-
-                return Ok(());
+                return Ok(req);
             } else {
                 let e = ErrorKind::UseNotLogin;
                 sink.send_msg(&login_res(&e.to_string())).await?;
@@ -140,6 +138,22 @@ impl Manager {
 
             return Err(e.into());
         };
+    }
+
+    pub async fn handle_message(&mut self, message: Box<dyn Message>) -> Result<()> {
+        let (mut stream, mut sink) = message.split();
+
+        let req = self.verify(&mut stream, &mut sink).await?;
+
+        self.start_client(
+            req.user_id,
+            Platfrom::try_from(req.platfrom).unwrap(),
+            stream,
+            sink,
+        )
+        .await;
+
+        Ok(())
     }
 
     pub async fn new(config: &Config, chat_msg_sender: ChatMsgSender) -> Self {
