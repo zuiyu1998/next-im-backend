@@ -1,13 +1,16 @@
 use std::{collections::HashMap, sync::Arc, time::Duration};
 
 use abi::{
+    chrono,
     config::Config,
     dashmap::DashMap,
     message::{Message, MessageSink, MessageStream},
+    nanoid::nanoid,
     pb::{
         hepler::{login_res, ping, pong},
         message::{
             login_response::LoginResponseState, msg::Union, ChatMsg, LoginRequest, Msg, Platfrom,
+            Sequence,
         },
     },
     tokio::{
@@ -17,6 +20,7 @@ use abi::{
             RwLock,
         },
     },
+    tonic::Request,
     tracing,
     utils::{get_rpc_client, ChatServiceGrpcClient},
     UserId,
@@ -24,7 +28,7 @@ use abi::{
 
 use cache::{get_cache, Cache};
 
-use crate::{client::Client, ErrorKind, Result};
+use crate::{client::Client, Error, ErrorKind, Result};
 
 pub type Hub = Arc<DashMap<UserId, Client>>;
 
@@ -39,12 +43,87 @@ pub struct Manager {
     pub chat_rpc: ChatServiceGrpcClient,
 }
 
+pub struct Peer {
+    pub cache: Arc<dyn Cache>,
+    pub chat_msg_sender: ChatMsgSender,
+    pub stream: Box<dyn MessageStream>,
+    pub sink: Arc<RwLock<Box<dyn MessageSink>>>,
+}
+
+impl Peer {
+    pub fn new(
+        cache: Arc<dyn Cache>,
+        chat_msg_sender: ChatMsgSender,
+        sink: Arc<RwLock<Box<dyn MessageSink>>>,
+        stream: Box<dyn MessageStream>,
+    ) -> Self {
+        Peer {
+            cache,
+            chat_msg_sender,
+            stream,
+            sink,
+        }
+    }
+
+    pub async fn handle_chat_msg(&mut self, mut chat_msg: ChatMsg) -> Result<()> {
+        tracing::debug!(
+            "received msg sender_id:{}, receiver_id: {}",
+            chat_msg.sender_id,
+            chat_msg.receiver_id
+        );
+
+        chat_msg.server_id = nanoid!();
+
+        chat_msg.server_at = chrono::Local::now()
+            .naive_local()
+            .and_utc()
+            .timestamp_millis();
+
+        let sequence = Sequence {
+            chat_type: chat_msg.chat_type,
+            sender_id: chat_msg.sender_id,
+            receiver_id: chat_msg.receiver_id,
+        };
+
+        self.cache.get_seq(&&sequence).await?;
+
+        self.chat_msg_sender
+            .send(chat_msg)
+            .await
+            .map_err(|e| Error::SendError(e.to_string()))?;
+        Ok(())
+    }
+
+    pub async fn run(&mut self) {
+        while let Ok(Some(msg)) = self.stream.next_msg().await {
+            // 处理消息
+            match msg.union.unwrap() {
+                Union::Ping(_) => {
+                    if let Err(e) = self.sink.write().await.send_msg(&pong()).await {
+                        tracing::error!("reply ping error : {:?}", e);
+                        break;
+                    }
+                }
+                Union::Pong(_) => {
+                    tracing::debug!("received pong message");
+                }
+                Union::ChatMsg(msg) => {
+                    let _res = self.handle_chat_msg(msg).await;
+                }
+                _ => {
+                    //todo
+                }
+            }
+        }
+    }
+}
+
 impl Manager {
     pub async fn start_client(
         &mut self,
         user_id: UserId,
         platform: Platfrom,
-        mut stream: Box<dyn MessageStream>,
+        stream: Box<dyn MessageStream>,
         sink: Box<dyn MessageSink>,
     ) {
         tracing::debug!(
@@ -68,46 +147,21 @@ impl Manager {
             }
         });
 
-        let cloned_tx = shard_sink.clone();
-        let sender = self.chat_msg_sender.clone();
+        let mut peer = Peer::new(
+            self.cache.clone(),
+            self.chat_msg_sender.clone(),
+            shard_sink.clone(),
+            stream,
+        );
 
-        let mut message_task = tokio::spawn(async move {
-            while let Ok(Some(msg)) = stream.next_msg().await {
-                // 处理消息
-                match msg.union.unwrap() {
-                    Union::Ping(_) => {
-                        if let Err(e) = cloned_tx.write().await.send_msg(&pong()).await {
-                            tracing::error!("reply ping error : {:?}", e);
-                            break;
-                        }
-                    }
-                    Union::Pong(_) => {
-                        // tracing::debug!("received pong message");
-                    }
-                    Union::ChatMsg(msg) => {
-                        tracing::debug!(
-                            "msg sender_id:{}, receiver_id: {}",
-                            msg.sender_id,
-                            msg.receiver_id
-                        );
-
-                        if let Err(e) = sender.send(msg).await {
-                            tracing::error!("chat_msg_sender send error: {}", e);
-                        }
-                    }
-                    _ => {
-                        //todo
-                    }
-                }
-            }
-        });
+        let mut peer_task = tokio::spawn(async move { peer.run().await });
 
         tokio::select! {
-            _ = (&mut message_task) => {
+            _ = (&mut peer_task) => {
                 ping_task.abort();
             },
             _ = (&mut ping_task) => {
-                message_task.abort();
+                peer_task.abort();
             },
         }
     }
@@ -195,7 +249,15 @@ impl Manager {
 
     pub async fn run(&mut self, mut receiver: ChatMsgReceiver) {
         while let Some(msg) = receiver.recv().await {
-            tracing::debug!("chat_msg: {:?}", msg);
+            tracing::debug!(
+                "send chat rpc chat_msg: sender_id: {}, receiver_id: {}",
+                msg.sender_id,
+                msg.receiver_id
+            );
+
+            if let Err(e) = self.chat_rpc.send_message(Request::new(msg)).await {
+                tracing::error!("chat rpc send message error: {}", e);
+            }
         }
     }
 

@@ -98,15 +98,15 @@ pub mod msg {
     #[derive(serde::Serialize, serde::Deserialize, Clone, PartialEq, ::prost::Oneof)]
     pub enum Union {
         #[prost(message, tag = "1")]
-        ChatMsg(super::ChatMsg),
-        #[prost(message, tag = "2")]
         Ping(super::Ping),
-        #[prost(message, tag = "3")]
+        #[prost(message, tag = "2")]
         Pong(super::Pong),
-        #[prost(message, tag = "4")]
+        #[prost(message, tag = "3")]
         LoginReq(super::LoginRequest),
-        #[prost(message, tag = "5")]
+        #[prost(message, tag = "4")]
         LoginRes(super::LoginResponse),
+        #[prost(message, tag = "5")]
+        ChatMsg(super::ChatMsg),
     }
 }
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]

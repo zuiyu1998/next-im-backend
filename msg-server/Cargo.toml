@@ -1,0 +1,9 @@
+[package]
+name = "msg-server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+abi = { path = "../abi" }
+
+rdkafka = { version = "0.36.2", features = ["cmake-build"] }

@@ -74,11 +74,11 @@ message LoginResponse {
 
 message Msg {
   oneof union {
-    ChatMsg chat_msg = 1;
-    Ping ping = 2;
-    Pong Pong = 3;
-    LoginRequest login_req = 4;
-    LoginResponse login_res = 5;
+    Ping ping = 1;
+    Pong Pong = 2;
+    LoginRequest login_req = 3;
+    LoginResponse login_res = 4;
+    ChatMsg chat_msg = 5;
   }
 }
 

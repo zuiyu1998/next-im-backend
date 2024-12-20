@@ -8,7 +8,7 @@ pub enum ErrorKind {
     #[error("UseNotLogin")]
     UseNotLogin,
     #[error("UseTokenInvaild")]
-    UseTokenInvaild
+    UseTokenInvaild,
 }
 
 #[derive(Debug, Error)]
@@ -21,6 +21,8 @@ pub enum Error {
     SerdeError(#[from] BincodeError),
     #[error("io error: {0}")]
     AbiError(#[from] AbiError),
+    #[error("send error: {0}")]
+    SendError(String),
 }
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;

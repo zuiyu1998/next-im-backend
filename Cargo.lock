@@ -665,15 +665,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 
 [[package]]
-name = "chat"
-version = "0.1.0"
-dependencies = [
- "abi",
- "rdkafka",
- "serde_json",
-]
-
-[[package]]
 name = "chrono"
 version = "0.4.39"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -779,10 +770,6 @@ name = "const-oid"
 version = "0.9.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2459377285ad874054d797f3ccebf984978aa39129f6eafde5cdc8315b612f8"
-
-[[package]]
-name = "consumer"
-version = "0.1.0"
 
 [[package]]
 name = "core-foundation"
@@ -2021,6 +2008,14 @@ dependencies = [
  "abi",
  "cache",
  "thiserror",
+]
+
+[[package]]
+name = "msg-server"
+version = "0.1.0"
+dependencies = [
+ "abi",
+ "rdkafka",
 ]
 
 [[package]]
