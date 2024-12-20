@@ -54,15 +54,17 @@ impl Client {
         }
     }
 
-    pub async fn login(&self, id: UserId, token: &str) -> Result<Box<dyn Message>> {
+    pub async fn api_login(&self, id: UserId, token: &str) -> Result<Box<dyn Message>> {
         let client = reqwest::Client::new();
         let json_value = json!({
             "id": id,
             "token": token
         });
 
+        let url = format!("{}/user/login",self.config.http());
+
         let res: Value = client
-            .post(self.config.http())
+            .post(url)
             .json(&json_value)
             .send()
             .await?
@@ -80,7 +82,7 @@ impl Client {
     }
 
     pub async fn connect(&mut self, id: UserId, token: &str) -> Result<()> {
-        let message = self.login(id, token).await?;
+        let message = self.api_login(id, token).await?;
         let (mut stream, sink) = message.split();
 
         let shard_sink = Arc::new(RwLock::new(sink));
