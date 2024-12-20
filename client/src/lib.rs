@@ -13,7 +13,7 @@ use abi::{
         message::{msg::Union, MsgRoute},
     },
     reqwest,
-    serde_json::json,
+    serde_json::{self, json, Value},
     tokio::{self, sync::RwLock},
     tracing,
     utils::msg_route_to_url,
@@ -61,13 +61,17 @@ impl Client {
             "token": token
         });
 
-        let route: MsgRoute = client
+        let res: Value = client
             .post(self.config.http())
             .json(&json_value)
             .send()
             .await?
             .json()
             .await?;
+
+        let route_data = res.get("data").ok_or(ErrorKind::ServerError)?.clone();
+        let route: MsgRoute = serde_json::from_value(route_data)?;
+
 
         let mut connector = TcpMessageConnector::new(msg_route_to_url(route));
 
