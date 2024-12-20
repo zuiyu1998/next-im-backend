@@ -1,20 +1,23 @@
 mod error;
 
 use std::{
-    sync::{Arc, OnceLock, Mutex},
+    sync::{Arc, OnceLock},
     time::Duration,
 };
 
 use abi::{
     config::{ApiConfig, Config},
-    message::{tcp::TcpMessageConnector, Message, MessageConnector, MessageSink},
+    message::{tcp::TcpMessageConnector, Message, MessageConnector, MessageSink, MessageStream},
     pb::{
-        hepler::{ping, pong},
-        message::{msg::Union, MsgRoute},
+        hepler::{login, ping, pong},
+        message::{msg::Union, Msg, MsgRoute, Platfrom},
     },
     reqwest,
     serde_json::{self, json, Value},
-    tokio::{self, sync::RwLock},
+    tokio::{
+        self,
+        sync::{Mutex, RwLock},
+    },
     tracing,
     utils::msg_route_to_url,
     UserId,
@@ -30,12 +33,12 @@ impl IMClient {
         let client = Client::from_config(config);
         let _ = CLIENT.set(Mutex::new(client));
     }
-  
-    pub async fn connect(&mut self, id: UserId, token: &str) -> Result<()> {
-       let mut guard = CLIENT.get().unwrap().lock().unwrap();
-       guard.connect(id, token).await?;
 
-       Ok(())
+    pub async fn connect(&mut self, id: UserId, token: &str) -> Result<()> {
+        let mut guard = CLIENT.get().unwrap().lock().await;
+        guard.connect(id, token).await?;
+
+        Ok(())
     }
 }
 
@@ -61,7 +64,7 @@ impl Client {
             "token": token
         });
 
-        let url = format!("{}/user/login",self.config.http());
+        let url = format!("{}/user/login", self.config.http());
 
         let res: Value = client
             .post(url)
@@ -71,9 +74,8 @@ impl Client {
             .json()
             .await?;
 
-        let route_data = res.get("data").ok_or(ErrorKind::ServerError)?.clone();
+        let route_data = res.get("data").ok_or(ErrorKind::JsonInvaild)?.clone();
         let route: MsgRoute = serde_json::from_value(route_data)?;
-
 
         let mut connector = TcpMessageConnector::new(msg_route_to_url(route));
 
@@ -81,9 +83,34 @@ impl Client {
         Ok(message)
     }
 
+    pub async fn login(
+        &mut self,
+        id: UserId,
+        token: &str,
+        stream: &mut Box<dyn MessageStream>,
+        sink: &mut Box<dyn MessageSink>,
+    ) -> Result<()> {
+        sink.send_msg(&login(id, token, Platfrom::Windows)).await?;
+
+        if let Some(Msg {
+            union: Some(Union::LoginRes(res)),
+        }) = stream.next_ms(1500).await?
+        {
+            if res.error.is_some() {
+                return Err(ErrorKind::ServerError(res.error.unwrap()).into());
+            } else {
+                Ok(())
+            }
+        } else {
+            Err(ErrorKind::MsgInvaild.into())
+        }
+    }
+
     pub async fn connect(&mut self, id: UserId, token: &str) -> Result<()> {
         let message = self.api_login(id, token).await?;
-        let (mut stream, sink) = message.split();
+        let (mut stream, mut sink) = message.split();
+
+        self.login(id, token, &mut stream, &mut sink).await?;
 
         let shard_sink = Arc::new(RwLock::new(sink));
 

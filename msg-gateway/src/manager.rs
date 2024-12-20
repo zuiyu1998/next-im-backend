@@ -6,7 +6,9 @@ use abi::{
     message::{Message, MessageSink, MessageStream},
     pb::{
         hepler::{login_res, ping, pong},
-        message::{msg::Union, ChatMsg, LoginRequest, Msg, Platfrom},
+        message::{
+            login_response::LoginResponseState, msg::Union, ChatMsg, LoginRequest, Msg, Platfrom,
+        },
     },
     tokio::{
         self,
@@ -122,19 +124,24 @@ impl Manager {
             if let Some(token) = self.cache.get_user_token(req.user_id).await? {
                 if token != req.token {
                     let e = ErrorKind::UseTokenInvaild;
-                    sink.send_msg(&login_res(&e.to_string())).await?;
+                    sink.send_msg(&login_res(LoginResponseState::Fail, Some(e.to_string())))
+                        .await?;
                     return Err(e.into());
+                } else {
+                    sink.send_msg(&login_res(LoginResponseState::Success, None))
+                        .await?;
+                    return Ok(req);
                 }
-
-                return Ok(req);
             } else {
                 let e = ErrorKind::UseNotLogin;
-                sink.send_msg(&login_res(&e.to_string())).await?;
+                sink.send_msg(&login_res(LoginResponseState::Fail, Some(e.to_string())))
+                    .await?;
                 return Err(e.into());
             }
         } else {
             let e = ErrorKind::MsgInvaild;
-            sink.send_msg(&login_res(&e.to_string())).await?;
+            sink.send_msg(&login_res(LoginResponseState::Fail, Some(e.to_string())))
+                .await?;
 
             return Err(e.into());
         };

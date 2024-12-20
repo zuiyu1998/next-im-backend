@@ -64,7 +64,12 @@ message LoginRequest {
 }
 
 message LoginResponse {
-  string error = 2; 
+  enum LoginResponseState {
+    Fail = 0;
+    Success = 1;
+  }
+  LoginResponseState state = 1;
+  optional string error = 2; 
 }
 
 message Msg {

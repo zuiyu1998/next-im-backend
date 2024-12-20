@@ -54,8 +54,39 @@ pub struct LoginRequest {
 }
 #[derive(serde::Serialize, serde::Deserialize, Clone, PartialEq, ::prost::Message)]
 pub struct LoginResponse {
-    #[prost(string, tag = "2")]
-    pub error: ::prost::alloc::string::String,
+    #[prost(enumeration = "login_response::LoginResponseState", tag = "1")]
+    pub state: i32,
+    #[prost(string, optional, tag = "2")]
+    pub error: ::core::option::Option<::prost::alloc::string::String>,
+}
+/// Nested message and enum types in `LoginResponse`.
+pub mod login_response {
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
+    #[repr(i32)]
+    pub enum LoginResponseState {
+        Fail = 0,
+        Success = 1,
+    }
+    impl LoginResponseState {
+        /// String value of the enum field names used in the ProtoBuf definition.
+        ///
+        /// The values are not transformed in any way and thus are considered stable
+        /// (if the ProtoBuf definition does not change) and safe for programmatic use.
+        pub fn as_str_name(&self) -> &'static str {
+            match self {
+                Self::Fail => "Fail",
+                Self::Success => "Success",
+            }
+        }
+        /// Creates an enum from field names used in the ProtoBuf definition.
+        pub fn from_str_name(value: &str) -> ::core::option::Option<Self> {
+            match value {
+                "Fail" => Some(Self::Fail),
+                "Success" => Some(Self::Success),
+                _ => None,
+            }
+        }
+    }
 }
 #[derive(serde::Serialize, serde::Deserialize, Clone, PartialEq, ::prost::Message)]
 pub struct Msg {

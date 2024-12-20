@@ -5,8 +5,12 @@ use abi::serde_json::Error as SerdeJsonError;
 
 #[derive(Debug, Error)]
 pub enum ErrorKind {
-    #[error("ServerError")]
-    ServerError,
+    #[error("ServerError: {0}")]
+    ServerError(String),
+    #[error("MsgInvaild")]
+    MsgInvaild,
+    #[error("JsonInvaild")]
+    JsonInvaild,
 }
 
 #[derive(Debug, Error)]

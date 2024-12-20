@@ -1,6 +1,9 @@
 pub mod message;
 pub mod hepler {
-    use super::message::{msg::Union, LoginRequest, LoginResponse, Msg, Ping, Platfrom, Pong};
+    use super::message::{
+        login_response::LoginResponseState, msg::Union, LoginRequest, LoginResponse, Msg, Ping,
+        Platfrom, Pong,
+    };
 
     pub fn ping() -> Msg {
         Msg {
@@ -24,10 +27,11 @@ pub mod hepler {
         }
     }
 
-    pub fn login_res(error: &str) -> Msg {
+    pub fn login_res(state: LoginResponseState, error: Option<String>) -> Msg {
         Msg {
             union: Some(Union::LoginRes(LoginResponse {
-                error: error.to_owned(),
+                state: state.into(),
+                error,
             })),
         }
     }
