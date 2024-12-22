@@ -24,14 +24,14 @@ use abi::{
 };
 pub use error::*;
 
-static CLIENT: OnceLock<Mutex<Client>> = OnceLock::new();
+static CLIENT: OnceLock<Arc<Mutex<Client>>> = OnceLock::new();
 
 pub struct IMClient;
 
 impl IMClient {
     pub fn from_config(config: &Config) {
-        let client = Client::from_config(config);
-        let _ = CLIENT.set(Mutex::new(client));
+        let client = Arc::new(Mutex::new(Client::from_config(config)));
+        let _ = CLIENT.set(client);
     }
 
     pub async fn connect(&mut self, id: UserId, token: &str) -> Result<()> {
