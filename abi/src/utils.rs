@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use nacos_rust_client::client::{
     naming_client::{Instance, ServiceInstanceKey},
     ClientBuilder, NamingClient,
@@ -61,17 +63,12 @@ pub fn register_service(config: &Config, service_type: ServiceType) {
 }
 
 pub async fn get_rpc_client<T: GrpcClient>(config: &Config) -> Result<T> {
-    let naming_client = NamingClient::new_with_addrs(
-        &config.service_center.endpoint_addrs(),
-        config.service_center.teant.to_owned(),
-        None,
-    );
+    init_service_center(config);
 
     let rpc_config = T::get_service_type().get_rpc_config(config);
 
     let service_key = ServiceInstanceKey::new(&rpc_config.service_name, &rpc_config.group_name);
 
-    let _ = TonicDiscoverFactory::new(naming_client.clone());
     let discover_factory = nacos_tonic_discover::get_last_factory().unwrap();
 
     let channel = discover_factory
@@ -80,4 +77,16 @@ pub async fn get_rpc_client<T: GrpcClient>(config: &Config) -> Result<T> {
         .map_err(|e| Error::NacosError(e.to_string()))?;
 
     Ok(T::new_client(channel))
+}
+
+pub fn init_service_center(config: &Config) -> Arc<NamingClient> {
+    let naming_client = NamingClient::new_with_addrs(
+        &config.service_center.endpoint_addrs(),
+        config.service_center.teant.to_owned(),
+        None,
+    );
+
+    let _ = TonicDiscoverFactory::new(naming_client.clone());
+
+    naming_client
 }

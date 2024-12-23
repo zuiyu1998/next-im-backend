@@ -23,5 +23,6 @@ pub use tokio_util;
 pub use tonic;
 pub use tracing;
 pub use tracing_subscriber;
+pub use nacos_rust_client;
 
 pub type UserId = i64;

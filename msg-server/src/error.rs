@@ -10,6 +10,8 @@ pub enum Error {
     AbiError(#[from] AbiError),
     #[error("serde json error: {0}")]
     SerdeJsonError(#[from] SerdeJsonError),
+    #[error("nacos error: {0}")]
+    NacosError(String),
 }
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
