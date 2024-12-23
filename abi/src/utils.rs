@@ -7,12 +7,14 @@ use url::Url;
 
 use crate::{
     config::{Config, ServiceType},
-    pb::message::{chat_service_client::ChatServiceClient, MsgRoute, MsgRouteType},
+    pb::message::{
+        chat_producer_service_client::ChatProducerServiceClient, MsgRoute, MsgRouteType,
+    },
     tonic::transport::Channel,
     Error, Result,
 };
 
-pub type ChatServiceGrpcClient = ChatServiceClient<Channel>;
+pub type ChatProducerGrpcClient = ChatProducerServiceClient<Channel>;
 
 pub fn msg_route_to_url(route: MsgRoute) -> Url {
     let route_type: MsgRouteType = MsgRouteType::try_from(route.route_type).unwrap();
@@ -28,13 +30,13 @@ pub trait GrpcClient {
     fn new_client(channel: Channel) -> Self;
 }
 
-impl GrpcClient for ChatServiceClient<Channel> {
+impl GrpcClient for ChatProducerServiceClient<Channel> {
     fn get_service_type() -> ServiceType {
         ServiceType::Chat
     }
 
     fn new_client(channel: Channel) -> Self {
-        ChatServiceClient::new(channel)
+        ChatProducerGrpcClient::new(channel)
     }
 }
 

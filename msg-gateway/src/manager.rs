@@ -22,7 +22,7 @@ use abi::{
     },
     tonic::Request,
     tracing,
-    utils::{get_rpc_client, ChatServiceGrpcClient},
+    utils::{get_rpc_client, ChatProducerGrpcClient},
     UserId,
 };
 
@@ -40,7 +40,7 @@ pub struct Manager {
     pub hub: Hub,
     pub cache: Arc<dyn Cache>,
     pub chat_msg_sender: ChatMsgSender,
-    pub chat_rpc: ChatServiceGrpcClient,
+    pub chat_rpc: ChatProducerGrpcClient,
 }
 
 pub struct Peer {

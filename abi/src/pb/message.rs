@@ -109,13 +109,6 @@ pub mod msg {
         ChatMsg(super::ChatMsg),
     }
 }
-#[derive(Clone, Copy, PartialEq, ::prost::Message)]
-pub struct SequenceUpdate {
-    #[prost(message, optional, tag = "1")]
-    pub sequence: ::core::option::Option<Sequence>,
-    #[prost(int64, tag = "2")]
-    pub id: i64,
-}
 #[derive(Hash, Eq, Clone, Copy, PartialEq, ::prost::Message)]
 pub struct Sequence {
     /// 聊天类型
@@ -127,11 +120,6 @@ pub struct Sequence {
     /// 接受者id
     #[prost(int64, tag = "3")]
     pub receiver_id: i64,
-}
-#[derive(Clone, Copy, PartialEq, ::prost::Message)]
-pub struct SequenceResponse {
-    #[prost(int64, tag = "1")]
-    pub id: i64,
 }
 #[derive(Clone, Copy, PartialEq, ::prost::Message)]
 pub struct SendMsgResponse {}
@@ -256,251 +244,6 @@ impl Platfrom {
             "Ios" => Some(Self::Ios),
             "Web" => Some(Self::Web),
             _ => None,
-        }
-    }
-}
-/// Generated client implementations.
-pub mod db_service_client {
-    #![allow(
-        unused_variables,
-        dead_code,
-        missing_docs,
-        clippy::wildcard_imports,
-        clippy::let_unit_value
-    )]
-    use tonic::codegen::http::Uri;
-    use tonic::codegen::*;
-    #[derive(Debug, Clone)]
-    pub struct DbServiceClient<T> {
-        inner: tonic::client::Grpc<T>,
-    }
-    impl DbServiceClient<tonic::transport::Channel> {
-        /// Attempt to create a new client by connecting to a given endpoint.
-        pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
-        where
-            D: TryInto<tonic::transport::Endpoint>,
-            D::Error: Into<StdError>,
-        {
-            let conn = tonic::transport::Endpoint::new(dst)?.connect().await?;
-            Ok(Self::new(conn))
-        }
-    }
-    impl<T> DbServiceClient<T>
-    where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
-        T::Error: Into<StdError>,
-        T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
-        <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
-    {
-        pub fn new(inner: T) -> Self {
-            let inner = tonic::client::Grpc::new(inner);
-            Self { inner }
-        }
-        pub fn with_origin(inner: T, origin: Uri) -> Self {
-            let inner = tonic::client::Grpc::with_origin(inner, origin);
-            Self { inner }
-        }
-        pub fn with_interceptor<F>(
-            inner: T,
-            interceptor: F,
-        ) -> DbServiceClient<InterceptedService<T, F>>
-        where
-            F: tonic::service::Interceptor,
-            T::ResponseBody: Default,
-            T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
-                Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
-                >,
-            >,
-            <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error:
-                Into<StdError> + std::marker::Send + std::marker::Sync,
-        {
-            DbServiceClient::new(InterceptedService::new(inner, interceptor))
-        }
-        /// Compress requests with the given encoding.
-        ///
-        /// This requires the server to support it otherwise it might respond with an
-        /// error.
-        #[must_use]
-        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
-            self.inner = self.inner.send_compressed(encoding);
-            self
-        }
-        /// Enable decompressing responses.
-        #[must_use]
-        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
-            self.inner = self.inner.accept_compressed(encoding);
-            self
-        }
-        /// Limits the maximum size of a decoded message.
-        ///
-        /// Default: `4MB`
-        #[must_use]
-        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
-            self.inner = self.inner.max_decoding_message_size(limit);
-            self
-        }
-        /// Limits the maximum size of an encoded message.
-        ///
-        /// Default: `usize::MAX`
-        #[must_use]
-        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
-            self.inner = self.inner.max_encoding_message_size(limit);
-            self
-        }
-        /// /读取序列号id
-        pub async fn read_sequence_id(
-            &mut self,
-            request: impl tonic::IntoRequest<super::Sequence>,
-        ) -> std::result::Result<tonic::Response<super::SequenceResponse>, tonic::Status> {
-            self.inner.ready().await.map_err(|e| {
-                tonic::Status::unknown(format!("Service was not ready: {}", e.into()))
-            })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/message.DbService/ReadSequenceId");
-            let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(GrpcMethod::new("message.DbService", "ReadSequenceId"));
-            self.inner.unary(req, path, codec).await
-        }
-        /// /存储序列号id
-        pub async fn update_sequence_id(
-            &mut self,
-            request: impl tonic::IntoRequest<super::SequenceUpdate>,
-        ) -> std::result::Result<tonic::Response<super::SequenceResponse>, tonic::Status> {
-            self.inner.ready().await.map_err(|e| {
-                tonic::Status::unknown(format!("Service was not ready: {}", e.into()))
-            })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/message.DbService/UpdateSequenceId");
-            let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(GrpcMethod::new("message.DbService", "UpdateSequenceId"));
-            self.inner.unary(req, path, codec).await
-        }
-        /// /新增序列号id
-        pub async fn create_sequence_id(
-            &mut self,
-            request: impl tonic::IntoRequest<super::Sequence>,
-        ) -> std::result::Result<tonic::Response<super::SequenceResponse>, tonic::Status> {
-            self.inner.ready().await.map_err(|e| {
-                tonic::Status::unknown(format!("Service was not ready: {}", e.into()))
-            })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/message.DbService/CreateSequenceId");
-            let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(GrpcMethod::new("message.DbService", "CreateSequenceId"));
-            self.inner.unary(req, path, codec).await
-        }
-    }
-}
-/// Generated client implementations.
-pub mod sequence_service_client {
-    #![allow(
-        unused_variables,
-        dead_code,
-        missing_docs,
-        clippy::wildcard_imports,
-        clippy::let_unit_value
-    )]
-    use tonic::codegen::http::Uri;
-    use tonic::codegen::*;
-    #[derive(Debug, Clone)]
-    pub struct SequenceServiceClient<T> {
-        inner: tonic::client::Grpc<T>,
-    }
-    impl SequenceServiceClient<tonic::transport::Channel> {
-        /// Attempt to create a new client by connecting to a given endpoint.
-        pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
-        where
-            D: TryInto<tonic::transport::Endpoint>,
-            D::Error: Into<StdError>,
-        {
-            let conn = tonic::transport::Endpoint::new(dst)?.connect().await?;
-            Ok(Self::new(conn))
-        }
-    }
-    impl<T> SequenceServiceClient<T>
-    where
-        T: tonic::client::GrpcService<tonic::body::BoxBody>,
-        T::Error: Into<StdError>,
-        T::ResponseBody: Body<Data = Bytes> + std::marker::Send + 'static,
-        <T::ResponseBody as Body>::Error: Into<StdError> + std::marker::Send,
-    {
-        pub fn new(inner: T) -> Self {
-            let inner = tonic::client::Grpc::new(inner);
-            Self { inner }
-        }
-        pub fn with_origin(inner: T, origin: Uri) -> Self {
-            let inner = tonic::client::Grpc::with_origin(inner, origin);
-            Self { inner }
-        }
-        pub fn with_interceptor<F>(
-            inner: T,
-            interceptor: F,
-        ) -> SequenceServiceClient<InterceptedService<T, F>>
-        where
-            F: tonic::service::Interceptor,
-            T::ResponseBody: Default,
-            T: tonic::codegen::Service<
-                http::Request<tonic::body::BoxBody>,
-                Response = http::Response<
-                    <T as tonic::client::GrpcService<tonic::body::BoxBody>>::ResponseBody,
-                >,
-            >,
-            <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error:
-                Into<StdError> + std::marker::Send + std::marker::Sync,
-        {
-            SequenceServiceClient::new(InterceptedService::new(inner, interceptor))
-        }
-        /// Compress requests with the given encoding.
-        ///
-        /// This requires the server to support it otherwise it might respond with an
-        /// error.
-        #[must_use]
-        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
-            self.inner = self.inner.send_compressed(encoding);
-            self
-        }
-        /// Enable decompressing responses.
-        #[must_use]
-        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
-            self.inner = self.inner.accept_compressed(encoding);
-            self
-        }
-        /// Limits the maximum size of a decoded message.
-        ///
-        /// Default: `4MB`
-        #[must_use]
-        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
-            self.inner = self.inner.max_decoding_message_size(limit);
-            self
-        }
-        /// Limits the maximum size of an encoded message.
-        ///
-        /// Default: `usize::MAX`
-        #[must_use]
-        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
-            self.inner = self.inner.max_encoding_message_size(limit);
-            self
-        }
-        /// 获取会话id
-        pub async fn get_sequence_id(
-            &mut self,
-            request: impl tonic::IntoRequest<super::Sequence>,
-        ) -> std::result::Result<tonic::Response<super::SequenceResponse>, tonic::Status> {
-            self.inner.ready().await.map_err(|e| {
-                tonic::Status::unknown(format!("Service was not ready: {}", e.into()))
-            })?;
-            let codec = tonic::codec::ProstCodec::default();
-            let path =
-                http::uri::PathAndQuery::from_static("/message.SequenceService/GetSequenceId");
-            let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(GrpcMethod::new("message.SequenceService", "GetSequenceId"));
-            self.inner.unary(req, path, codec).await
         }
     }
 }
@@ -643,7 +386,7 @@ pub mod msg_service_client {
     }
 }
 /// Generated client implementations.
-pub mod chat_service_client {
+pub mod chat_producer_service_client {
     #![allow(
         unused_variables,
         dead_code,
@@ -654,10 +397,10 @@ pub mod chat_service_client {
     use tonic::codegen::http::Uri;
     use tonic::codegen::*;
     #[derive(Debug, Clone)]
-    pub struct ChatServiceClient<T> {
+    pub struct ChatProducerServiceClient<T> {
         inner: tonic::client::Grpc<T>,
     }
-    impl ChatServiceClient<tonic::transport::Channel> {
+    impl ChatProducerServiceClient<tonic::transport::Channel> {
         /// Attempt to create a new client by connecting to a given endpoint.
         pub async fn connect<D>(dst: D) -> Result<Self, tonic::transport::Error>
         where
@@ -668,7 +411,7 @@ pub mod chat_service_client {
             Ok(Self::new(conn))
         }
     }
-    impl<T> ChatServiceClient<T>
+    impl<T> ChatProducerServiceClient<T>
     where
         T: tonic::client::GrpcService<tonic::body::BoxBody>,
         T::Error: Into<StdError>,
@@ -686,7 +429,7 @@ pub mod chat_service_client {
         pub fn with_interceptor<F>(
             inner: T,
             interceptor: F,
-        ) -> ChatServiceClient<InterceptedService<T, F>>
+        ) -> ChatProducerServiceClient<InterceptedService<T, F>>
         where
             F: tonic::service::Interceptor,
             T::ResponseBody: Default,
@@ -699,7 +442,7 @@ pub mod chat_service_client {
             <T as tonic::codegen::Service<http::Request<tonic::body::BoxBody>>>::Error:
                 Into<StdError> + std::marker::Send + std::marker::Sync,
         {
-            ChatServiceClient::new(InterceptedService::new(inner, interceptor))
+            ChatProducerServiceClient::new(InterceptedService::new(inner, interceptor))
         }
         /// Compress requests with the given encoding.
         ///
@@ -740,430 +483,15 @@ pub mod chat_service_client {
                 tonic::Status::unknown(format!("Service was not ready: {}", e.into()))
             })?;
             let codec = tonic::codec::ProstCodec::default();
-            let path = http::uri::PathAndQuery::from_static("/message.ChatService/SendMessage");
+            let path =
+                http::uri::PathAndQuery::from_static("/message.ChatProducerService/SendMessage");
             let mut req = request.into_request();
-            req.extensions_mut()
-                .insert(GrpcMethod::new("message.ChatService", "SendMessage"));
+            req.extensions_mut().insert(GrpcMethod::new(
+                "message.ChatProducerService",
+                "SendMessage",
+            ));
             self.inner.unary(req, path, codec).await
         }
-    }
-}
-/// Generated server implementations.
-pub mod db_service_server {
-    #![allow(
-        unused_variables,
-        dead_code,
-        missing_docs,
-        clippy::wildcard_imports,
-        clippy::let_unit_value
-    )]
-    use tonic::codegen::*;
-    /// Generated trait containing gRPC methods that should be implemented for use with DbServiceServer.
-    #[async_trait]
-    pub trait DbService: std::marker::Send + std::marker::Sync + 'static {
-        /// /读取序列号id
-        async fn read_sequence_id(
-            &self,
-            request: tonic::Request<super::Sequence>,
-        ) -> std::result::Result<tonic::Response<super::SequenceResponse>, tonic::Status>;
-        /// /存储序列号id
-        async fn update_sequence_id(
-            &self,
-            request: tonic::Request<super::SequenceUpdate>,
-        ) -> std::result::Result<tonic::Response<super::SequenceResponse>, tonic::Status>;
-        /// /新增序列号id
-        async fn create_sequence_id(
-            &self,
-            request: tonic::Request<super::Sequence>,
-        ) -> std::result::Result<tonic::Response<super::SequenceResponse>, tonic::Status>;
-    }
-    #[derive(Debug)]
-    pub struct DbServiceServer<T> {
-        inner: Arc<T>,
-        accept_compression_encodings: EnabledCompressionEncodings,
-        send_compression_encodings: EnabledCompressionEncodings,
-        max_decoding_message_size: Option<usize>,
-        max_encoding_message_size: Option<usize>,
-    }
-    impl<T> DbServiceServer<T> {
-        pub fn new(inner: T) -> Self {
-            Self::from_arc(Arc::new(inner))
-        }
-        pub fn from_arc(inner: Arc<T>) -> Self {
-            Self {
-                inner,
-                accept_compression_encodings: Default::default(),
-                send_compression_encodings: Default::default(),
-                max_decoding_message_size: None,
-                max_encoding_message_size: None,
-            }
-        }
-        pub fn with_interceptor<F>(inner: T, interceptor: F) -> InterceptedService<Self, F>
-        where
-            F: tonic::service::Interceptor,
-        {
-            InterceptedService::new(Self::new(inner), interceptor)
-        }
-        /// Enable decompressing requests with the given encoding.
-        #[must_use]
-        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
-            self.accept_compression_encodings.enable(encoding);
-            self
-        }
-        /// Compress responses with the given encoding, if the client supports it.
-        #[must_use]
-        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
-            self.send_compression_encodings.enable(encoding);
-            self
-        }
-        /// Limits the maximum size of a decoded message.
-        ///
-        /// Default: `4MB`
-        #[must_use]
-        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
-            self.max_decoding_message_size = Some(limit);
-            self
-        }
-        /// Limits the maximum size of an encoded message.
-        ///
-        /// Default: `usize::MAX`
-        #[must_use]
-        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
-            self.max_encoding_message_size = Some(limit);
-            self
-        }
-    }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for DbServiceServer<T>
-    where
-        T: DbService,
-        B: Body + std::marker::Send + 'static,
-        B::Error: Into<StdError> + std::marker::Send + 'static,
-    {
-        type Response = http::Response<tonic::body::BoxBody>;
-        type Error = std::convert::Infallible;
-        type Future = BoxFuture<Self::Response, Self::Error>;
-        fn poll_ready(
-            &mut self,
-            _cx: &mut Context<'_>,
-        ) -> Poll<std::result::Result<(), Self::Error>> {
-            Poll::Ready(Ok(()))
-        }
-        fn call(&mut self, req: http::Request<B>) -> Self::Future {
-            match req.uri().path() {
-                "/message.DbService/ReadSequenceId" => {
-                    #[allow(non_camel_case_types)]
-                    struct ReadSequenceIdSvc<T: DbService>(pub Arc<T>);
-                    impl<T: DbService> tonic::server::UnaryService<super::Sequence> for ReadSequenceIdSvc<T> {
-                        type Response = super::SequenceResponse;
-                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::Sequence>,
-                        ) -> Self::Future {
-                            let inner = Arc::clone(&self.0);
-                            let fut = async move {
-                                <T as DbService>::read_sequence_id(&inner, request).await
-                            };
-                            Box::pin(fut)
-                        }
-                    }
-                    let accept_compression_encodings = self.accept_compression_encodings;
-                    let send_compression_encodings = self.send_compression_encodings;
-                    let max_decoding_message_size = self.max_decoding_message_size;
-                    let max_encoding_message_size = self.max_encoding_message_size;
-                    let inner = self.inner.clone();
-                    let fut = async move {
-                        let method = ReadSequenceIdSvc(inner);
-                        let codec = tonic::codec::ProstCodec::default();
-                        let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
-                        let res = grpc.unary(method, req).await;
-                        Ok(res)
-                    };
-                    Box::pin(fut)
-                }
-                "/message.DbService/UpdateSequenceId" => {
-                    #[allow(non_camel_case_types)]
-                    struct UpdateSequenceIdSvc<T: DbService>(pub Arc<T>);
-                    impl<T: DbService> tonic::server::UnaryService<super::SequenceUpdate> for UpdateSequenceIdSvc<T> {
-                        type Response = super::SequenceResponse;
-                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::SequenceUpdate>,
-                        ) -> Self::Future {
-                            let inner = Arc::clone(&self.0);
-                            let fut = async move {
-                                <T as DbService>::update_sequence_id(&inner, request).await
-                            };
-                            Box::pin(fut)
-                        }
-                    }
-                    let accept_compression_encodings = self.accept_compression_encodings;
-                    let send_compression_encodings = self.send_compression_encodings;
-                    let max_decoding_message_size = self.max_decoding_message_size;
-                    let max_encoding_message_size = self.max_encoding_message_size;
-                    let inner = self.inner.clone();
-                    let fut = async move {
-                        let method = UpdateSequenceIdSvc(inner);
-                        let codec = tonic::codec::ProstCodec::default();
-                        let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
-                        let res = grpc.unary(method, req).await;
-                        Ok(res)
-                    };
-                    Box::pin(fut)
-                }
-                "/message.DbService/CreateSequenceId" => {
-                    #[allow(non_camel_case_types)]
-                    struct CreateSequenceIdSvc<T: DbService>(pub Arc<T>);
-                    impl<T: DbService> tonic::server::UnaryService<super::Sequence> for CreateSequenceIdSvc<T> {
-                        type Response = super::SequenceResponse;
-                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::Sequence>,
-                        ) -> Self::Future {
-                            let inner = Arc::clone(&self.0);
-                            let fut = async move {
-                                <T as DbService>::create_sequence_id(&inner, request).await
-                            };
-                            Box::pin(fut)
-                        }
-                    }
-                    let accept_compression_encodings = self.accept_compression_encodings;
-                    let send_compression_encodings = self.send_compression_encodings;
-                    let max_decoding_message_size = self.max_decoding_message_size;
-                    let max_encoding_message_size = self.max_encoding_message_size;
-                    let inner = self.inner.clone();
-                    let fut = async move {
-                        let method = CreateSequenceIdSvc(inner);
-                        let codec = tonic::codec::ProstCodec::default();
-                        let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
-                        let res = grpc.unary(method, req).await;
-                        Ok(res)
-                    };
-                    Box::pin(fut)
-                }
-                _ => Box::pin(async move {
-                    let mut response = http::Response::new(empty_body());
-                    let headers = response.headers_mut();
-                    headers.insert(
-                        tonic::Status::GRPC_STATUS,
-                        (tonic::Code::Unimplemented as i32).into(),
-                    );
-                    headers.insert(
-                        http::header::CONTENT_TYPE,
-                        tonic::metadata::GRPC_CONTENT_TYPE,
-                    );
-                    Ok(response)
-                }),
-            }
-        }
-    }
-    impl<T> Clone for DbServiceServer<T> {
-        fn clone(&self) -> Self {
-            let inner = self.inner.clone();
-            Self {
-                inner,
-                accept_compression_encodings: self.accept_compression_encodings,
-                send_compression_encodings: self.send_compression_encodings,
-                max_decoding_message_size: self.max_decoding_message_size,
-                max_encoding_message_size: self.max_encoding_message_size,
-            }
-        }
-    }
-    /// Generated gRPC service name
-    pub const SERVICE_NAME: &str = "message.DbService";
-    impl<T> tonic::server::NamedService for DbServiceServer<T> {
-        const NAME: &'static str = SERVICE_NAME;
-    }
-}
-/// Generated server implementations.
-pub mod sequence_service_server {
-    #![allow(
-        unused_variables,
-        dead_code,
-        missing_docs,
-        clippy::wildcard_imports,
-        clippy::let_unit_value
-    )]
-    use tonic::codegen::*;
-    /// Generated trait containing gRPC methods that should be implemented for use with SequenceServiceServer.
-    #[async_trait]
-    pub trait SequenceService: std::marker::Send + std::marker::Sync + 'static {
-        /// 获取会话id
-        async fn get_sequence_id(
-            &self,
-            request: tonic::Request<super::Sequence>,
-        ) -> std::result::Result<tonic::Response<super::SequenceResponse>, tonic::Status>;
-    }
-    #[derive(Debug)]
-    pub struct SequenceServiceServer<T> {
-        inner: Arc<T>,
-        accept_compression_encodings: EnabledCompressionEncodings,
-        send_compression_encodings: EnabledCompressionEncodings,
-        max_decoding_message_size: Option<usize>,
-        max_encoding_message_size: Option<usize>,
-    }
-    impl<T> SequenceServiceServer<T> {
-        pub fn new(inner: T) -> Self {
-            Self::from_arc(Arc::new(inner))
-        }
-        pub fn from_arc(inner: Arc<T>) -> Self {
-            Self {
-                inner,
-                accept_compression_encodings: Default::default(),
-                send_compression_encodings: Default::default(),
-                max_decoding_message_size: None,
-                max_encoding_message_size: None,
-            }
-        }
-        pub fn with_interceptor<F>(inner: T, interceptor: F) -> InterceptedService<Self, F>
-        where
-            F: tonic::service::Interceptor,
-        {
-            InterceptedService::new(Self::new(inner), interceptor)
-        }
-        /// Enable decompressing requests with the given encoding.
-        #[must_use]
-        pub fn accept_compressed(mut self, encoding: CompressionEncoding) -> Self {
-            self.accept_compression_encodings.enable(encoding);
-            self
-        }
-        /// Compress responses with the given encoding, if the client supports it.
-        #[must_use]
-        pub fn send_compressed(mut self, encoding: CompressionEncoding) -> Self {
-            self.send_compression_encodings.enable(encoding);
-            self
-        }
-        /// Limits the maximum size of a decoded message.
-        ///
-        /// Default: `4MB`
-        #[must_use]
-        pub fn max_decoding_message_size(mut self, limit: usize) -> Self {
-            self.max_decoding_message_size = Some(limit);
-            self
-        }
-        /// Limits the maximum size of an encoded message.
-        ///
-        /// Default: `usize::MAX`
-        #[must_use]
-        pub fn max_encoding_message_size(mut self, limit: usize) -> Self {
-            self.max_encoding_message_size = Some(limit);
-            self
-        }
-    }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for SequenceServiceServer<T>
-    where
-        T: SequenceService,
-        B: Body + std::marker::Send + 'static,
-        B::Error: Into<StdError> + std::marker::Send + 'static,
-    {
-        type Response = http::Response<tonic::body::BoxBody>;
-        type Error = std::convert::Infallible;
-        type Future = BoxFuture<Self::Response, Self::Error>;
-        fn poll_ready(
-            &mut self,
-            _cx: &mut Context<'_>,
-        ) -> Poll<std::result::Result<(), Self::Error>> {
-            Poll::Ready(Ok(()))
-        }
-        fn call(&mut self, req: http::Request<B>) -> Self::Future {
-            match req.uri().path() {
-                "/message.SequenceService/GetSequenceId" => {
-                    #[allow(non_camel_case_types)]
-                    struct GetSequenceIdSvc<T: SequenceService>(pub Arc<T>);
-                    impl<T: SequenceService> tonic::server::UnaryService<super::Sequence> for GetSequenceIdSvc<T> {
-                        type Response = super::SequenceResponse;
-                        type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
-                        fn call(
-                            &mut self,
-                            request: tonic::Request<super::Sequence>,
-                        ) -> Self::Future {
-                            let inner = Arc::clone(&self.0);
-                            let fut = async move {
-                                <T as SequenceService>::get_sequence_id(&inner, request).await
-                            };
-                            Box::pin(fut)
-                        }
-                    }
-                    let accept_compression_encodings = self.accept_compression_encodings;
-                    let send_compression_encodings = self.send_compression_encodings;
-                    let max_decoding_message_size = self.max_decoding_message_size;
-                    let max_encoding_message_size = self.max_encoding_message_size;
-                    let inner = self.inner.clone();
-                    let fut = async move {
-                        let method = GetSequenceIdSvc(inner);
-                        let codec = tonic::codec::ProstCodec::default();
-                        let mut grpc = tonic::server::Grpc::new(codec)
-                            .apply_compression_config(
-                                accept_compression_encodings,
-                                send_compression_encodings,
-                            )
-                            .apply_max_message_size_config(
-                                max_decoding_message_size,
-                                max_encoding_message_size,
-                            );
-                        let res = grpc.unary(method, req).await;
-                        Ok(res)
-                    };
-                    Box::pin(fut)
-                }
-                _ => Box::pin(async move {
-                    let mut response = http::Response::new(empty_body());
-                    let headers = response.headers_mut();
-                    headers.insert(
-                        tonic::Status::GRPC_STATUS,
-                        (tonic::Code::Unimplemented as i32).into(),
-                    );
-                    headers.insert(
-                        http::header::CONTENT_TYPE,
-                        tonic::metadata::GRPC_CONTENT_TYPE,
-                    );
-                    Ok(response)
-                }),
-            }
-        }
-    }
-    impl<T> Clone for SequenceServiceServer<T> {
-        fn clone(&self) -> Self {
-            let inner = self.inner.clone();
-            Self {
-                inner,
-                accept_compression_encodings: self.accept_compression_encodings,
-                send_compression_encodings: self.send_compression_encodings,
-                max_decoding_message_size: self.max_decoding_message_size,
-                max_encoding_message_size: self.max_encoding_message_size,
-            }
-        }
-    }
-    /// Generated gRPC service name
-    pub const SERVICE_NAME: &str = "message.SequenceService";
-    impl<T> tonic::server::NamedService for SequenceServiceServer<T> {
-        const NAME: &'static str = SERVICE_NAME;
     }
 }
 /// Generated server implementations.
@@ -1420,7 +748,7 @@ pub mod msg_service_server {
     }
 }
 /// Generated server implementations.
-pub mod chat_service_server {
+pub mod chat_producer_service_server {
     #![allow(
         unused_variables,
         dead_code,
@@ -1429,23 +757,23 @@ pub mod chat_service_server {
         clippy::let_unit_value
     )]
     use tonic::codegen::*;
-    /// Generated trait containing gRPC methods that should be implemented for use with ChatServiceServer.
+    /// Generated trait containing gRPC methods that should be implemented for use with ChatProducerServiceServer.
     #[async_trait]
-    pub trait ChatService: std::marker::Send + std::marker::Sync + 'static {
+    pub trait ChatProducerService: std::marker::Send + std::marker::Sync + 'static {
         async fn send_message(
             &self,
             request: tonic::Request<super::ChatMsg>,
         ) -> std::result::Result<tonic::Response<super::MsgResponse>, tonic::Status>;
     }
     #[derive(Debug)]
-    pub struct ChatServiceServer<T> {
+    pub struct ChatProducerServiceServer<T> {
         inner: Arc<T>,
         accept_compression_encodings: EnabledCompressionEncodings,
         send_compression_encodings: EnabledCompressionEncodings,
         max_decoding_message_size: Option<usize>,
         max_encoding_message_size: Option<usize>,
     }
-    impl<T> ChatServiceServer<T> {
+    impl<T> ChatProducerServiceServer<T> {
         pub fn new(inner: T) -> Self {
             Self::from_arc(Arc::new(inner))
         }
@@ -1493,9 +821,9 @@ pub mod chat_service_server {
             self
         }
     }
-    impl<T, B> tonic::codegen::Service<http::Request<B>> for ChatServiceServer<T>
+    impl<T, B> tonic::codegen::Service<http::Request<B>> for ChatProducerServiceServer<T>
     where
-        T: ChatService,
+        T: ChatProducerService,
         B: Body + std::marker::Send + 'static,
         B::Error: Into<StdError> + std::marker::Send + 'static,
     {
@@ -1510,10 +838,10 @@ pub mod chat_service_server {
         }
         fn call(&mut self, req: http::Request<B>) -> Self::Future {
             match req.uri().path() {
-                "/message.ChatService/SendMessage" => {
+                "/message.ChatProducerService/SendMessage" => {
                     #[allow(non_camel_case_types)]
-                    struct SendMessageSvc<T: ChatService>(pub Arc<T>);
-                    impl<T: ChatService> tonic::server::UnaryService<super::ChatMsg> for SendMessageSvc<T> {
+                    struct SendMessageSvc<T: ChatProducerService>(pub Arc<T>);
+                    impl<T: ChatProducerService> tonic::server::UnaryService<super::ChatMsg> for SendMessageSvc<T> {
                         type Response = super::MsgResponse;
                         type Future = BoxFuture<tonic::Response<Self::Response>, tonic::Status>;
                         fn call(
@@ -1522,7 +850,7 @@ pub mod chat_service_server {
                         ) -> Self::Future {
                             let inner = Arc::clone(&self.0);
                             let fut = async move {
-                                <T as ChatService>::send_message(&inner, request).await
+                                <T as ChatProducerService>::send_message(&inner, request).await
                             };
                             Box::pin(fut)
                         }
@@ -1565,7 +893,7 @@ pub mod chat_service_server {
             }
         }
     }
-    impl<T> Clone for ChatServiceServer<T> {
+    impl<T> Clone for ChatProducerServiceServer<T> {
         fn clone(&self) -> Self {
             let inner = self.inner.clone();
             Self {
@@ -1578,8 +906,8 @@ pub mod chat_service_server {
         }
     }
     /// Generated gRPC service name
-    pub const SERVICE_NAME: &str = "message.ChatService";
-    impl<T> tonic::server::NamedService for ChatServiceServer<T> {
+    pub const SERVICE_NAME: &str = "message.ChatProducerService";
+    impl<T> tonic::server::NamedService for ChatProducerServiceServer<T> {
         const NAME: &'static str = SERVICE_NAME;
     }
 }

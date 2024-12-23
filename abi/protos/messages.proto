@@ -10,36 +10,27 @@ message MsgRoute {
   MsgRouteType route_type = 2;
 }
 
-service DbService {
-  ///读取序列号id
-  rpc ReadSequenceId(Sequence) returns (SequenceResponse);
-  ///存储序列号id
-  rpc UpdateSequenceId(SequenceUpdate) returns (SequenceResponse);
-  ///新增序列号id
-  rpc CreateSequenceId(Sequence) returns (SequenceResponse);
-}
-
 message ChatMsg {
-    //客户端生成的id
-    string local_id = 1;
-    //服务端生成的id
-    string server_id = 2;
-    //服务端时间
-    int64 server_at= 3;
-    //服务端生成的序列号id
-    int64 seq_id = 4;
-    //生成时间
-    int64 create_at = 5;
-    //发送者id
-    int64 sender_id = 6;
-    //接受者id
-    int64 receiver_id = 7;
-    //消息类型
-    ChatMsgType msg_type = 8;
-    //消息内容
-    bytes content = 9;
-    //聊天类型
-    ChatType chat_type = 10;
+  // 客户端生成的id
+  string local_id = 1;
+  // 服务端生成的id
+  string server_id = 2;
+  // 服务端时间
+  int64 server_at = 3;
+  // 服务端生成的序列号id
+  int64 seq_id = 4;
+  // 生成时间
+  int64 create_at = 5;
+  // 发送者id
+  int64 sender_id = 6;
+  // 接受者id
+  int64 receiver_id = 7;
+  // 消息类型
+  ChatMsgType msg_type = 8;
+  // 消息内容
+  bytes content = 9;
+  // 聊天类型
+  ChatType chat_type = 10;
 }
 
 enum ChatType {
@@ -48,17 +39,15 @@ enum ChatType {
 }
 
 enum ChatMsgType {
-    Text = 0;
+  Text = 0;
 }
 
-message Ping {
-}
+message Ping {}
 
-message Pong {
-}
+message Pong {}
 
 message LoginRequest {
-  int64 user_id = 1;  
+  int64 user_id = 1;
   string token = 2;
   Platfrom platfrom = 3;
 }
@@ -69,7 +58,7 @@ message LoginResponse {
     Success = 1;
   }
   LoginResponseState state = 1;
-  optional string error = 2; 
+  optional string error = 2;
 }
 
 message Msg {
@@ -83,57 +72,40 @@ message Msg {
 }
 
 enum Platfrom {
-    Unknow = 0;
-    Windows = 1;
-    Linux = 2;
-    Mac = 3;
-    Android = 4;
-    Ios = 5;
-    Web = 6;
-}
-
-message SequenceUpdate {
-  Sequence sequence = 1;
-  int64 id = 2;
+  Unknow = 0;
+  Windows = 1;
+  Linux = 2;
+  Mac = 3;
+  Android = 4;
+  Ios = 5;
+  Web = 6;
 }
 
 message Sequence {
-  //聊天类型
+  // 聊天类型
   ChatType chat_type = 1;
-  //发送者id
+  // 发送者id
   int64 sender_id = 2;
-  //接受者id
+  // 接受者id
   int64 receiver_id = 3;
 }
 
-message SequenceResponse {
-  int64 id = 1;
-}
-
-service SequenceService {
-  //获取会话id
-  rpc GetSequenceId(Sequence) returns (SequenceResponse);
-} 
-
-message SendMsgResponse {
-}
+message SendMsgResponse {}
 
 service MsgService {
-  //向chat 服务发送聊天消息
+  // 向chat 服务发送聊天消息
   rpc SendMessage(ChatMsg) returns (SendMsgResponse);
-  //向用户发送消息
+  // 向用户发送消息
   rpc SendMsgToUser(ChatMsg) returns (SendMsgResponse);
-  //向组发送消息
+  // 向组发送消息
   rpc SendGroupMsgToUser(ChatMsg) returns (SendMsgResponse);
 }
 
 message MsgResponse {
   string local_id = 1;
   string server_id = 2;
-  int64  server_at = 3;
+  int64 server_at = 3;
   string err = 4;
 }
 
-service ChatService {
-  rpc SendMessage(ChatMsg) returns (MsgResponse);
-}
+service ChatProducerService { rpc SendMessage(ChatMsg) returns (MsgResponse); }

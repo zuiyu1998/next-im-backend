@@ -1,13 +1,11 @@
+use abi::pb::message::chat_producer_service_server::ChatProducerServiceServer;
 use abi::utils::register_service;
 use abi::{
     config::{Config, ServiceType},
-    pb::message::{
-        chat_service_server::{ChatService, ChatServiceServer},
-        ChatMsg, MsgResponse,
-    },
+    pb::message::{chat_producer_service_server::ChatProducerService, ChatMsg, MsgResponse},
+    serde_json,
     tonic::{async_trait, transport::Server, Request, Response, Status},
     tracing,
-    serde_json,
 };
 use rdkafka::{
     admin::{AdminClient, AdminOptions, NewTopic, TopicReplication},
@@ -19,12 +17,12 @@ use rdkafka::{
 
 use std::time::Duration;
 
-pub struct ChatRpcService {
+pub struct ChatProducerRpcService {
     kafka: FutureProducer,
     topic: String,
 }
 
-impl ChatRpcService {
+impl ChatProducerRpcService {
     pub fn new(kafka: FutureProducer, topic: String) -> Self {
         Self { kafka, topic }
     }
@@ -61,7 +59,7 @@ impl ChatRpcService {
         tracing::info!("<chat> rpc service register to service register center");
 
         let chat_rpc = Self::new(producer, config.kafka.topic.clone());
-        let service = ChatServiceServer::new(chat_rpc);
+        let service = ChatProducerServiceServer::new(chat_rpc);
         tracing::info!(
             "<chat> rpc service started at {}",
             config.rpc.chat.rpc_server_url()
@@ -114,13 +112,13 @@ impl ChatRpcService {
 }
 
 #[async_trait]
-impl ChatService for ChatRpcService {
+impl ChatProducerService for ChatProducerRpcService {
     async fn send_message(
         &self,
         request: Request<ChatMsg>,
     ) -> Result<Response<MsgResponse>, Status> {
         let msg = request.into_inner();
-        
+
         // send msg to kafka
         let payload = serde_json::to_string(&msg).unwrap();
         // let kafka generate key, then we need set FutureRecord<String, type>

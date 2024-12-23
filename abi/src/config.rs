@@ -206,7 +206,6 @@ impl Default for ServiceCenterConfig {
 pub struct RpcConfig {
     pub msg: RpcServerConfig,
     pub chat: RpcServerConfig,
-    pub db: RpcServerConfig,
     // pub pusher: RpcServerConfig,
 }
 
@@ -231,12 +230,6 @@ impl Default for RpcConfig {
                 ip: "127.0.0.1".to_owned(),
                 service_name: "msg".to_owned(),
                 group_name: "msg-group".to_owned(),
-            },
-            db: RpcServerConfig {
-                port: 50004,
-                ip: "127.0.0.1".to_owned(),
-                service_name: "db".to_owned(),
-                group_name: "db-group".to_owned(),
             },
         }
     }
@@ -269,7 +262,6 @@ pub enum ServiceType {
     Chat,
     Msg,
     All,
-    Db,
 }
 
 impl ServiceType {
@@ -278,8 +270,6 @@ impl ServiceType {
             ServiceType::Chat => config.rpc.chat.clone(),
 
             ServiceType::Msg => config.rpc.msg.clone(),
-            ServiceType::Db => config.rpc.db.clone(),
-
             ServiceType::All => todo!("ALL"),
         };
 

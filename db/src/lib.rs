@@ -1,32 +1,19 @@
-use abi::{
-    config::{Config, ServiceType},
-    pb::message::db_service_server::DbServiceServer,
-    sea_orm::Database,
-    tonic::transport::Server,
-    tracing,
-    utils::register_service,
-    Result,
-};
+use abi::{config::Config, sea_orm::Database, Result};
 use std::sync::Arc;
 
 pub mod database;
 pub mod seq;
 
-mod rpc;
-
 use database::SeqDb;
 use migration::{Migrator, MigratorTrait};
 use seq::SeqRepo;
 
-pub struct DbRpcService {
+pub struct DbRepo {
     seq: Arc<dyn SeqRepo>,
 }
 
-impl DbRpcService {
-    pub async fn start(config: &Config) -> Result<()> {
-        register_service(config, ServiceType::Db);
-        tracing::info!("<db> rpc service register to service register center");
-
+impl DbRepo {
+    pub async fn new(config: &Config) -> Result<DbRepo> {
         let connect = Database::connect(&config.db.databse_url).await?;
 
         Migrator::up(&connect, None).await?;
@@ -35,20 +22,8 @@ impl DbRpcService {
             conn: connect.clone(),
         });
 
-        let db_rpc = DbRpcService { seq };
+        let db = DbRepo { seq };
 
-        let service = DbServiceServer::new(db_rpc);
-        tracing::info!(
-            "<db> rpc service started at {}",
-            config.rpc.db.rpc_server_url()
-        );
-
-        Server::builder()
-            .add_service(service)
-            .serve(config.rpc.chat.rpc_server_url().parse().unwrap())
-            .await
-            .unwrap();
-
-        Ok(())
+        Ok(db)
     }
 }
