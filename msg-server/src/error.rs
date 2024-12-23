@@ -1,6 +1,6 @@
+use abi::serde_json::Error as SerdeJsonError;
 use abi::Error as AbiError;
 use thiserror::Error;
-use abi::serde_json::Error as SerdeJsonError;
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -12,6 +12,8 @@ pub enum Error {
     SerdeJsonError(#[from] SerdeJsonError),
     #[error("nacos error: {0}")]
     NacosError(String),
+    #[error("join error: {0}")]
+    JoinError(String),
 }
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;

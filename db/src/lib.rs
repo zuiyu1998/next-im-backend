@@ -9,7 +9,7 @@ use migration::{Migrator, MigratorTrait};
 use seq::SeqRepo;
 
 pub struct DbRepo {
-    seq: Arc<dyn SeqRepo>,
+    _seq: Arc<dyn SeqRepo>,
 }
 
 impl DbRepo {
@@ -22,7 +22,7 @@ impl DbRepo {
             conn: connect.clone(),
         });
 
-        let db = DbRepo { seq };
+        let db = DbRepo { _seq: seq };
 
         Ok(db)
     }

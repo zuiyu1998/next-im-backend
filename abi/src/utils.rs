@@ -63,7 +63,8 @@ pub fn register_service(config: &Config, service_type: ServiceType) {
 }
 
 pub async fn get_rpc_client<T: GrpcClient>(config: &Config) -> Result<T> {
-    init_service_center(config);
+    let naming_client = init_service_center(config);
+    let _ = TonicDiscoverFactory::new(naming_client.clone());
 
     let rpc_config = T::get_service_type().get_rpc_config(config);
 
@@ -85,8 +86,6 @@ pub fn init_service_center(config: &Config) -> Arc<NamingClient> {
         config.service_center.teant.to_owned(),
         None,
     );
-
-    let _ = TonicDiscoverFactory::new(naming_client.clone());
 
     naming_client
 }

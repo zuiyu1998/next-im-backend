@@ -1,5 +1,15 @@
-use crate::Result;
-use abi::{config::Config, pb::message::Msg, serde_json, tracing};
+use std::sync::Arc;
+
+use crate::{
+    pusher::{push_service, Pusher},
+    Error, Result,
+};
+use abi::{
+    config::Config,
+    futures,
+    pb::message::{ChatMsg, ChatType},
+    serde_json, tokio, tracing,
+};
 use rdkafka::{
     consumer::{CommitMode, Consumer, StreamConsumer},
     ClientConfig, Message,
@@ -7,6 +17,7 @@ use rdkafka::{
 
 pub struct ConsumerService {
     consumer: StreamConsumer,
+    pusher: Arc<dyn Pusher>,
 }
 
 impl ConsumerService {
@@ -37,7 +48,9 @@ impl ConsumerService {
             .subscribe(&[&config.kafka.topic])
             .expect("Can't subscribe to specified topic");
 
-        ConsumerService { consumer }
+        let pusher = push_service(config).await;
+
+        ConsumerService { consumer, pusher }
     }
 
     pub async fn consume(&mut self) -> Result<()> {
@@ -64,11 +77,30 @@ impl ConsumerService {
     pub async fn handle_msg(&self, payload: &str) -> Result<()> {
         tracing::debug!("Received message: {:#?}", payload);
 
-        let mut _msg: Msg = serde_json::from_str(payload)?;
+        let msg: ChatMsg = serde_json::from_str(payload)?;
 
-        // let mut tasks = Vec::with_capacity(2);
+        let msg_type: ChatType = ChatType::try_from(msg.chat_type).unwrap();
 
-        // futures::future::try_join_all(tasks).await?;
+        let mut tasks = Vec::with_capacity(2);
+
+        let pusher = self.pusher.clone();
+        let to_pusher = tokio::spawn(async move {
+            match msg_type {
+                ChatType::User => {
+                    if let Err(e) = pusher.push_single_msg(msg).await {
+                        tracing::error!("failed to send message to pusher, error: {:?}", e);
+                    }
+                }
+                ChatType::Group => {
+                    tracing::debug!("send message to pusher, msg: {:?}", msg);
+                }
+            }
+        });
+        tasks.push(to_pusher);
+
+        futures::future::try_join_all(tasks)
+            .await
+            .map_err(|e| Error::JoinError(e.to_string()))?;
 
         Ok(())
     }
