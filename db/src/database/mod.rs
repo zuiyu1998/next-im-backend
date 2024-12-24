@@ -1,3 +1,3 @@
-mod seq;
+mod msg;
 
-pub use seq::*;
+pub use msg::MsgDb;

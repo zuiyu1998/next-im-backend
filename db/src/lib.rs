@@ -1,15 +1,17 @@
-use abi::{config::Config, sea_orm::Database, Result};
 use std::sync::Arc;
 
-pub mod database;
-pub mod seq;
+use abi::{config::Config, sea_orm::Database, Result};
 
-use database::SeqDb;
+pub mod database;
+
+mod msg;
+
+use database::MsgDb;
 use migration::{Migrator, MigratorTrait};
-use seq::SeqRepo;
+use msg::MessageStoreRepo;
 
 pub struct DbRepo {
-    _seq: Arc<dyn SeqRepo>,
+    msg: Arc<dyn MessageStoreRepo>,
 }
 
 impl DbRepo {
@@ -18,11 +20,9 @@ impl DbRepo {
 
         Migrator::up(&connect, None).await?;
 
-        let seq = Arc::new(SeqDb {
-            conn: connect.clone(),
-        });
+        let msg = MsgDb::new(connect);
 
-        let db = DbRepo { _seq: seq };
+        let db = DbRepo { msg: Arc::new(msg) };
 
         Ok(db)
     }
