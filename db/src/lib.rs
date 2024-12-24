@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use abi::{config::Config, sea_orm::Database, Result};
 
 pub mod database;
@@ -11,7 +9,7 @@ use migration::{Migrator, MigratorTrait};
 use msg::MessageStoreRepo;
 
 pub struct DbRepo {
-    msg: Arc<dyn MessageStoreRepo>,
+   pub msg: Box<dyn MessageStoreRepo>,
 }
 
 impl DbRepo {
@@ -22,7 +20,7 @@ impl DbRepo {
 
         let msg = MsgDb::new(connect);
 
-        let db = DbRepo { msg: Arc::new(msg) };
+        let db = DbRepo { msg: Box::new(msg) };
 
         Ok(db)
     }

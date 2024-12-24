@@ -2015,6 +2015,7 @@ name = "msg-server"
 version = "0.1.0"
 dependencies = [
  "abi",
+ "db",
  "rdkafka",
  "thiserror",
 ]

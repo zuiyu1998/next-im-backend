@@ -10,6 +10,7 @@ use abi::{
     pb::message::{ChatMsg, ChatType},
     serde_json, tokio, tracing,
 };
+use db::DbRepo;
 use rdkafka::{
     consumer::{CommitMode, Consumer, StreamConsumer},
     ClientConfig, Message,
@@ -18,6 +19,7 @@ use rdkafka::{
 pub struct ConsumerService {
     consumer: StreamConsumer,
     pusher: Arc<dyn Pusher>,
+    db: Arc<DbRepo>,
 }
 
 impl ConsumerService {
@@ -50,7 +52,13 @@ impl ConsumerService {
 
         let pusher = push_service(config).await;
 
-        ConsumerService { consumer, pusher }
+        let db = Arc::new(DbRepo::new(config).await.expect("db connect failed"));
+
+        ConsumerService {
+            consumer,
+            pusher,
+            db,
+        }
     }
 
     pub async fn consume(&mut self) -> Result<()> {
@@ -74,6 +82,11 @@ impl ConsumerService {
         }
     }
 
+    pub async fn send_to_db(db: Arc<DbRepo>, msg: ChatMsg) -> Result<()> {
+        db.msg.save_message(msg).await?;
+        Ok(())
+    }
+
     pub async fn handle_msg(&self, payload: &str) -> Result<()> {
         tracing::debug!("Received message: {:#?}", payload);
 
@@ -82,6 +95,18 @@ impl ConsumerService {
         let msg_type: ChatType = ChatType::try_from(msg.chat_type).unwrap();
 
         let mut tasks = Vec::with_capacity(2);
+
+        {
+            let db = self.db.clone();
+            let msg_cloned = msg.clone();
+            let to_db = tokio::spawn(async move {
+                if let Err(e) = Self::send_to_db(db, msg_cloned).await {
+                    tracing::error!("failed to send message to db, error: {:?}", e);
+                }
+            });
+
+            tasks.push(to_db);
+        }
 
         let pusher = self.pusher.clone();
         let to_pusher = tokio::spawn(async move {

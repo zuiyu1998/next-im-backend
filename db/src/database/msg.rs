@@ -8,6 +8,7 @@ use entity::msg::MsgActiveModel;
 
 use crate::msg::MessageStoreRepo;
 
+#[derive(Debug)]
 pub struct MsgDb {
     pub conn: DatabaseConnection,
 }
