@@ -1,6 +1,6 @@
 pub use sea_orm_migration::prelude::*;
 
-mod m20241204_153833_add_seq;
+mod m20241224_013252_create_msg;
 
 pub struct Migrator;
 
@@ -8,7 +8,7 @@ pub struct Migrator;
 impl MigratorTrait for Migrator {
     fn migrations() -> Vec<Box<dyn MigrationTrait>> {
         vec![
-            Box::new(m20241204_153833_add_seq::Migration),
+            Box::new(m20241224_013252_create_msg::Migration),
         ]
     }
 }
