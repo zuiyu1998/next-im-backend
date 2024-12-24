@@ -31,7 +31,6 @@ message ChatMsg {
   bytes content = 9;
   // 聊天类型
   ChatType chat_type = 10;
-  int64 local_at = 11;
 }
 
 enum ChatType {

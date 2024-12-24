@@ -6,7 +6,7 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i64,
     pub local_id: String,
-    pub local_at: i64,
+    pub create_at: i64,
     pub server_id: String,
     pub server_at: i64,
     pub seq_id: i64,
