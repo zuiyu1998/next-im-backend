@@ -3,6 +3,7 @@ use crate::{
     utils::get_now,
 };
 use uuid::Uuid;
+use serde::Serialize;
 
 pub struct ChatMsgBuilder {
     chat_type: ChatType,
@@ -37,6 +38,13 @@ impl Default for ChatMsgBuilder {
 }
 
 impl ChatMsgBuilder {
+    pub fn set_content<T: Serialize>(&mut self, v: &T) -> &mut ChatMsgBuilder {
+        let value = bincode::serialize(v).unwrap();
+        self.content = Some(value);
+
+        self
+    }
+
     pub fn build(self) -> ChatMsg {
         assert_eq!(self.content.is_some(), true);
 

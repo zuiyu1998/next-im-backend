@@ -13,11 +13,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     client.connect(1, "test").await?;
 
-    let msg = ChatMsgBuilder::default().build();
+    let mut builder = ChatMsgBuilder::default();
+    builder.set_content(&"hello world");
+
+    let msg = builder.build();
 
     client.send_msg(&msg).await?;
 
     loop {}
-
-    Ok(())
 }
