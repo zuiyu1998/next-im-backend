@@ -35,6 +35,7 @@ url = "2.5"
 rand = { version = "0.8" }
 socket2 = "0.5"
 network-interface = "2.0.0"
+uuid = { version = "1.11", features = ["v4"] }
 
 [build-dependencies]
 tonic-build = "0.12.0"

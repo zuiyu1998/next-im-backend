@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use chrono::{DateTime, Local};
 use nacos_rust_client::client::{
     naming_client::{Instance, ServiceInstanceKey},
     ClientBuilder, NamingClient,
@@ -15,6 +16,10 @@ use crate::{
     tonic::transport::Channel,
     Error, Result,
 };
+
+pub fn get_now() -> DateTime<Local> {
+    Local::now()
+}
 
 pub type ChatProducerGrpcClient = ChatProducerServiceClient<Channel>;
 
