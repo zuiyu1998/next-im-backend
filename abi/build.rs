@@ -34,6 +34,7 @@ fn main() {
             "LogoutResponse",
             "LogoutRequest",
             "MsgRoute",
+            "Handshake",
         ])
         .with_hash_and_eq(&["Sequence"])
         .compile_protos(&["protos/messages.proto"], &["protos"])

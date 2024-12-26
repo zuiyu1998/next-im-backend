@@ -11,18 +11,18 @@ pub struct ChatMsg {
     /// 客户端生成的id
     #[prost(string, tag = "1")]
     pub local_id: ::prost::alloc::string::String,
+    /// 生成时间
+    #[prost(int64, tag = "2")]
+    pub local_at: i64,
     /// 服务端生成的id
-    #[prost(string, tag = "2")]
+    #[prost(string, tag = "3")]
     pub server_id: ::prost::alloc::string::String,
     /// 服务端时间
-    #[prost(int64, tag = "3")]
+    #[prost(int64, tag = "4")]
     pub server_at: i64,
     /// 服务端生成的序列号id
-    #[prost(int64, tag = "4")]
-    pub seq_id: i64,
-    /// 生成时间
     #[prost(int64, tag = "5")]
-    pub create_at: i64,
+    pub seq_id: i64,
     /// 发送者id
     #[prost(int64, tag = "6")]
     pub sender_id: i64,
@@ -30,14 +30,14 @@ pub struct ChatMsg {
     #[prost(int64, tag = "7")]
     pub receiver_id: i64,
     /// 消息类型
-    #[prost(enumeration = "ChatMsgType", tag = "8")]
-    pub msg_type: i32,
-    /// 消息内容
-    #[prost(bytes = "vec", tag = "9")]
-    pub content: ::prost::alloc::vec::Vec<u8>,
-    /// 聊天类型
-    #[prost(enumeration = "ChatType", tag = "10")]
+    #[prost(enumeration = "ChatType", tag = "8")]
     pub chat_type: i32,
+    /// 消息内容类型
+    #[prost(enumeration = "ChatContentType", tag = "9")]
+    pub content_type: i32,
+    /// 消息内容
+    #[prost(bytes = "vec", tag = "10")]
+    pub content: ::prost::alloc::vec::Vec<u8>,
 }
 #[derive(serde::Serialize, serde::Deserialize, Clone, Copy, PartialEq, ::prost::Message)]
 pub struct Ping {}
@@ -89,8 +89,23 @@ pub mod login_response {
     }
 }
 #[derive(serde::Serialize, serde::Deserialize, Clone, PartialEq, ::prost::Message)]
+pub struct Handshake {
+    #[prost(oneof = "handshake::Union", tags = "1, 2")]
+    pub union: ::core::option::Option<handshake::Union>,
+}
+/// Nested message and enum types in `Handshake`.
+pub mod handshake {
+    #[derive(serde::Serialize, serde::Deserialize, Clone, PartialEq, ::prost::Oneof)]
+    pub enum Union {
+        #[prost(message, tag = "1")]
+        LoginReq(super::LoginRequest),
+        #[prost(message, tag = "2")]
+        LoginRes(super::LoginResponse),
+    }
+}
+#[derive(serde::Serialize, serde::Deserialize, Clone, PartialEq, ::prost::Message)]
 pub struct Msg {
-    #[prost(oneof = "msg::Union", tags = "1, 2, 3, 4, 5")]
+    #[prost(oneof = "msg::Union", tags = "1, 2, 3, 4")]
     pub union: ::core::option::Option<msg::Union>,
 }
 /// Nested message and enum types in `Msg`.
@@ -102,15 +117,13 @@ pub mod msg {
         #[prost(message, tag = "2")]
         Pong(super::Pong),
         #[prost(message, tag = "3")]
-        LoginReq(super::LoginRequest),
+        Handshake(super::Handshake),
         #[prost(message, tag = "4")]
-        LoginRes(super::LoginResponse),
-        #[prost(message, tag = "5")]
         ChatMsg(super::ChatMsg),
     }
 }
-#[derive(Hash, Eq, Clone, Copy, PartialEq, ::prost::Message)]
-pub struct Sequence {
+#[derive(Clone, Copy, PartialEq, ::prost::Message)]
+pub struct Session {
     /// 聊天类型
     #[prost(enumeration = "ChatType", tag = "1")]
     pub chat_type: i32,
@@ -185,10 +198,10 @@ impl ChatType {
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]
-pub enum ChatMsgType {
+pub enum ChatContentType {
     Text = 0,
 }
-impl ChatMsgType {
+impl ChatContentType {
     /// String value of the enum field names used in the ProtoBuf definition.
     ///
     /// The values are not transformed in any way and thus are considered stable
