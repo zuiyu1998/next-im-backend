@@ -25,6 +25,8 @@ pub enum Error {
     ReqwestError(#[from] ReqwestError),
     #[error("serde json error: {0}")]
     SerdeJsonError(#[from] SerdeJsonError),
+    #[error("{0}")]
+    WaitRespError(String)
 }
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
