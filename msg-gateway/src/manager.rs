@@ -10,8 +10,8 @@ use abi::{
         hepler::{login_res, ping, pong},
         message::{
             login_response::LoginResponseState, msg::Union, ChatMsg, LoginRequest, Msg, Platfrom,
-            Sequence,
         },
+        session::Session,
     },
     tokio::{
         self,
@@ -79,13 +79,9 @@ impl Peer {
             .and_utc()
             .timestamp_millis();
 
-        let sequence = Sequence {
-            chat_type: chat_msg.chat_type,
-            sender_id: chat_msg.sender_id,
-            receiver_id: chat_msg.receiver_id,
-        };
+        let session = Session::from_chat_msg(&chat_msg);
 
-        self.cache.get_seq(&&sequence).await?;
+        self.cache.get_seq(&session).await?;
 
         self.chat_msg_sender
             .send(chat_msg)

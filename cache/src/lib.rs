@@ -1,6 +1,6 @@
 mod redis_impl;
 
-use abi::{config::Config, pb::message::Sequence, tonic::async_trait, Result, UserId};
+use abi::{config::Config, pb::session::Session, tonic::async_trait, Result, UserId};
 use redis_impl::RedisCache;
 use std::sync::Arc;
 
@@ -12,10 +12,10 @@ pub trait Cache: 'static + Send + Sync {
     async fn get_user_token(&self, user_id: UserId) -> Result<Option<String>>;
 
     //获取当前的消息序列号
-    async fn get_seq(&self, sequence: &Sequence) -> Result<i64>;
+    async fn get_seq(&self, session: &Session) -> Result<i64>;
 
     //递增消息序列号
-    async fn increase_seq(&self, sequence: &Sequence) -> Result<i64>;
+    async fn increase_seq(&self, session: &Session) -> Result<i64>;
 
 }
 
