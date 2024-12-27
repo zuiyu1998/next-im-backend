@@ -12,18 +12,12 @@ use abi::{
     pb::{
         hepler::{login, ping, pong},
         message::{
-            handshake, msg::Union, ChatMsg, Handshake, LoginRequest, LoginResponse, Msg, MsgRoute,
-            Platfrom,
+            handshake, msg::Union, ChatMsg, Handshake, LoginResponse, Msg, MsgRoute, Platfrom,
         },
     },
     reqwest,
     serde_json::{self, json, Value},
-    tokio::{
-        self,
-        sync::{Mutex, RwLock},
-        task::{JoinHandle, JoinSet},
-        time::timeout,
-    },
+    tokio::{self, sync::Mutex, task::JoinSet, time::timeout},
     tracing,
     utils::msg_route_to_url,
     UserId,
@@ -57,37 +51,77 @@ impl IMClient {
 #[derive(Clone)]
 pub struct Client {
     ctx: ArcGlobalCtx,
-    peer: Arc<Mutex<Option<Peer>>>,
-}
-
-pub struct Peer {
-    ctx: ArcGlobalCtx,
-    shard_sink: Arc<Mutex<Box<dyn MessageSink>>>,
-    id: UserId,
-    token: String,
+    peer: Arc<Mutex<Option<PeerConn>>>,
 }
 
 pub struct PeerConn {
-    ctx: ArcGlobalCtx,
     id: UserId,
     token: String,
     sink: Arc<Mutex<Box<dyn MessageSink>>>,
-    stream: Arc<Mutex<Box<dyn MessageStream>>>,
+    stream: Arc<Mutex<Option<Box<dyn MessageStream>>>>,
     tasks: JoinSet<()>,
 }
 
 impl PeerConn {
-    pub fn new(ctx: ArcGlobalCtx, id: UserId, token: &str, message: Box<dyn Message>) -> Self {
+    pub fn new(id: UserId, token: &str, message: Box<dyn Message>) -> Self {
         let (stream, sink) = message.split();
 
         PeerConn {
-            ctx,
             id,
             token: token.to_string(),
             sink: Arc::new(Mutex::new(sink)),
-            stream: Arc::new(Mutex::new(stream)),
+            stream: Arc::new(Mutex::new(Some(stream))),
             tasks: JoinSet::default(),
         }
+    }
+
+    pub async fn send_msg(&self, msg: &ChatMsg) -> Result<()> {
+        let mut sink = self.sink.lock().await;
+        sink.send_chat_msg(msg).await?;
+
+        Ok(())
+    }
+
+    pub async fn start_ping_pong(&mut self) {
+        let cloned_tx = self.sink.clone();
+
+        self.tasks.spawn(async move {
+            loop {
+                if let Err(e) = cloned_tx.lock().await.send_msg(&ping()).await {
+                    tracing::error!("send ping error: {:?}", e);
+                    break;
+                }
+                tokio::time::sleep(Duration::from_secs(30)).await;
+            }
+        });
+    }
+
+    pub async fn start_recv_loop(&mut self) {
+        let mut stream = self.stream.lock().await.take().unwrap();
+        let sink = self.sink.clone();
+
+        self.tasks.spawn(async move {
+            while let Ok(Some(msg)) = stream.next_msg().await {
+                // 处理消息
+                match msg.union.unwrap() {
+                    Union::Ping(_) => {
+                        if let Err(e) = sink.lock().await.send_msg(&pong()).await {
+                            tracing::error!("reply ping error : {:?}", e);
+                            break;
+                        }
+                    }
+                    Union::Pong(_) => {
+                        tracing::debug!("received pong message");
+                    }
+                    Union::ChatMsg(msg) => {
+                        tracing::debug!("received message: {:#?}", msg);
+                    }
+                    _ => {
+                        //todo
+                    }
+                }
+            }
+        });
     }
 
     pub async fn do_handshake(&self) -> Result<()> {
@@ -121,7 +155,7 @@ impl PeerConn {
                 Some(Union::Handshake(Handshake {
                     union: Some(handshake::Union::LoginRes(res)),
                 })),
-        }) = stream.next_msg().await?
+        }) = stream.as_mut().unwrap().next_msg().await?
         {
             Ok(Some(res))
         } else {
@@ -148,6 +182,9 @@ impl Client {
     }
 
     pub async fn send_msg(&self, msg: &ChatMsg) -> Result<()> {
+        let mut guard = self.peer.lock().await;
+        guard.as_mut().unwrap().send_msg(msg).await?;
+
         Ok(())
     }
 
@@ -180,7 +217,7 @@ impl Client {
     pub async fn connect(&mut self, id: UserId, token: &str) -> Result<()> {
         let message = self.api_login(id, token).await?;
 
-        let peer_conn = PeerConn::new(self.ctx.clone(), id, token, message);
+        let peer_conn = PeerConn::new(id, token, message);
         peer_conn.do_handshake().await?;
 
         self.add_peer_conn(peer_conn).await?;
@@ -188,7 +225,13 @@ impl Client {
         Ok(())
     }
 
-    pub async fn add_peer_conn(&mut self, peer_conn: PeerConn) -> Result<()> {
+    pub async fn add_peer_conn(&mut self, mut peer_conn: PeerConn) -> Result<()> {
+        peer_conn.start_ping_pong().await;
+        peer_conn.start_recv_loop().await;
+
+        let mut guard = self.peer.lock().await;
+        *guard = Some(peer_conn);
+
         Ok(())
     }
 }

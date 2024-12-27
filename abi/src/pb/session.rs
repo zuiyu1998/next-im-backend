@@ -1,5 +1,3 @@
-use crate::message::Message;
-
 use super::message::{ChatMsg, ChatType};
 
 #[derive(Debug, Clone)]
