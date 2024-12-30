@@ -6,13 +6,13 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i64,
     pub local_id: String,
-    pub create_at: i64,
+    pub local_at: i64,
     pub server_id: String,
     pub server_at: i64,
     pub seq_id: i64,
     pub sender_id: i64,
     pub receiver_id: i64,
-    pub msg_type: String,
+    pub content_type: String,
     pub content: Vec<u8>,
     pub chat_type: String,
 }
