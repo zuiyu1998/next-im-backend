@@ -23,6 +23,8 @@ pub enum Error {
     AbiError(#[from] AbiError),
     #[error("send error: {0}")]
     SendError(String),
+    #[error("{0}")]
+    WaitRespError(String)
 }
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;

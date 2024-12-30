@@ -41,7 +41,7 @@ impl TcpServer {
             tokio::spawn(async move {
                 if let Err(e) = cloned_hub.handle_message(message).await {
                     tracing::error!("hub handle error: {}", e);
-                }
+                };
             });
         }
     }

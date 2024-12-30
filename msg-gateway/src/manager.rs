@@ -4,12 +4,14 @@ use abi::{
     chrono,
     config::Config,
     dashmap::DashMap,
+    futures::TryFutureExt,
     message::{Message, MessageSink, MessageStream},
     nanoid::nanoid,
     pb::{
         hepler::{login_res, ping, pong},
         message::{
-            login_response::LoginResponseState, msg::Union, ChatMsg, LoginRequest, Msg, Platfrom,
+            handshake, login_response::LoginResponseState, msg::Union, ChatMsg, Handshake, Msg,
+            Platfrom,
         },
         session::Session,
     },
@@ -17,8 +19,10 @@ use abi::{
         self,
         sync::{
             mpsc::{Receiver, Sender},
-            RwLock,
+            Mutex,
         },
+        task::JoinSet,
+        time::timeout,
     },
     tonic::Request,
     tracing,
@@ -28,12 +32,17 @@ use abi::{
 
 use cache::{get_cache, Cache};
 
-use crate::{client::Client, Error, ErrorKind, Result};
+use crate::{Error, ErrorKind, Result};
 
 pub type Hub = Arc<DashMap<UserId, Client>>;
 
 pub type ChatMsgSender = Sender<ChatMsg>;
 pub type ChatMsgReceiver = Receiver<ChatMsg>;
+
+pub struct Client {
+    pub user_id: UserId,
+    pub peers: HashMap<Platfrom, PeerConn>,
+}
 
 #[derive(Clone)]
 pub struct Manager {
@@ -43,26 +52,101 @@ pub struct Manager {
     pub chat_rpc: ChatProducerGrpcClient,
 }
 
-pub struct Peer {
-    pub cache: Arc<dyn Cache>,
-    pub chat_msg_sender: ChatMsgSender,
-    pub stream: Box<dyn MessageStream>,
-    pub sink: Arc<RwLock<Box<dyn MessageSink>>>,
+pub struct PeerConn {
+    sink: Arc<Mutex<Box<dyn MessageSink>>>,
+    stream: Arc<Mutex<Option<Box<dyn MessageStream>>>>,
+    tasks: JoinSet<()>,
+    platform: Platfrom,
+    cache: Arc<dyn Cache>,
+    chat_msg_sender: ChatMsgSender,
+    user_id: UserId,
 }
 
-impl Peer {
+impl PeerConn {
     pub fn new(
         cache: Arc<dyn Cache>,
         chat_msg_sender: ChatMsgSender,
-        sink: Arc<RwLock<Box<dyn MessageSink>>>,
-        stream: Box<dyn MessageStream>,
+        message: Box<dyn Message>,
     ) -> Self {
-        Peer {
+        let (stream, sink) = message.split();
+
+        PeerConn {
             cache,
             chat_msg_sender,
-            stream,
-            sink,
+            sink: Arc::new(Mutex::new(sink)),
+            stream: Arc::new(Mutex::new(Some(stream))),
+            tasks: JoinSet::default(),
+            platform: Platfrom::Unknow,
+            user_id: 0,
         }
+    }
+
+    pub async fn send_chat_msg(&self, chat_msg: &ChatMsg) -> Result<()> {
+        let mut sink = self.sink.lock().await;
+
+        sink.send_chat_msg(chat_msg).await?;
+        Ok(())
+    }
+
+    pub async fn do_handshake(&mut self) -> Result<()> {
+        tracing::info!("waiting for handshake request from client");
+        self.wait_handshake_loop().await?;
+        tracing::info!("handshake response success");
+        Ok(())
+    }
+
+    async fn wait_handshake(&mut self) -> Result<Option<()>> {
+        let mut stream = self.stream.lock().await;
+        let sink = self.sink.clone();
+
+        if let Some(Msg {
+            union:
+                Some(Union::Handshake(Handshake {
+                    union: Some(handshake::Union::LoginReq(req)),
+                })),
+        }) = stream.as_mut().unwrap().next_msg().await?
+        {
+            if let Some(token) = self.cache.get_user_token(req.user_id).await? {
+                if token != req.token {
+                    let mut sink = sink.lock().await;
+                    let e = ErrorKind::UseTokenInvaild;
+                    sink.send_msg(&login_res(LoginResponseState::Fail, Some(e.to_string())))
+                        .await?;
+                    return Err(e.into());
+                } else {
+                    self.user_id = req.user_id;
+                    self.platform = Platfrom::try_from(self.platform).unwrap();
+
+                    let mut sink = sink.lock().await;
+                    sink.send_msg(&login_res(LoginResponseState::Success, None))
+                        .await?;
+                    return Ok(Some(()));
+                }
+            } else {
+                let mut sink = sink.lock().await;
+                let e = ErrorKind::UseNotLogin;
+                sink.send_msg(&login_res(LoginResponseState::Fail, Some(e.to_string())))
+                    .await?;
+                return Err(e.into());
+            }
+        } else {
+            Ok(None)
+        }
+    }
+
+    async fn wait_handshake_loop(&mut self) -> Result<()> {
+        timeout(Duration::from_secs(5), async move {
+            loop {
+                match self.wait_handshake().await? {
+                    Some(_) => return Ok(()),
+                    None => {
+                        continue;
+                    }
+                }
+            }
+        })
+        .map_err(|e| Error::WaitRespError(format!("wait handshake timeout: {:?}", e)))
+        .await?
     }
 
     pub async fn handle_chat_msg(&mut self, mut chat_msg: ChatMsg) -> Result<()> {
@@ -90,129 +174,50 @@ impl Peer {
         Ok(())
     }
 
-    pub async fn run(&mut self) {
-        while let Ok(Some(msg)) = self.stream.next_msg().await {
-            // 处理消息
-            match msg.union.unwrap() {
-                Union::Ping(_) => {
-                    if let Err(e) = self.sink.write().await.send_msg(&pong()).await {
-                        tracing::error!("reply ping error : {:?}", e);
-                        break;
-                    }
-                }
-                Union::Pong(_) => {
-                    tracing::debug!("received pong message");
-                }
-                Union::ChatMsg(msg) => {
-                    let _res = self.handle_chat_msg(msg).await;
-                }
-                _ => {
-                    //todo
-                }
-            }
-        }
-    }
-}
+    pub async fn start_ping_pong(&mut self) {
+        let cloned_tx = self.sink.clone();
 
-impl Manager {
-    pub async fn start_client(
-        &mut self,
-        user_id: UserId,
-        platform: Platfrom,
-        stream: Box<dyn MessageStream>,
-        sink: Box<dyn MessageSink>,
-    ) {
-        tracing::debug!(
-            "start client: user_id-{}, platform-{}",
-            user_id,
-            platform.as_str_name()
-        );
-
-        let shard_sink = Arc::new(RwLock::new(sink));
-
-        self.add_sink(user_id, platform, shard_sink.clone());
-
-        let cloned_tx = shard_sink.clone();
-        let mut ping_task = tokio::spawn(async move {
+        self.tasks.spawn(async move {
             loop {
-                if let Err(e) = cloned_tx.write().await.send_msg(&ping()).await {
+                if let Err(e) = cloned_tx.lock().await.send_msg(&ping()).await {
                     tracing::error!("send ping error: {:?}", e);
                     break;
                 }
                 tokio::time::sleep(Duration::from_secs(30)).await;
             }
         });
-
-        let mut peer = Peer::new(
-            self.cache.clone(),
-            self.chat_msg_sender.clone(),
-            shard_sink.clone(),
-            stream,
-        );
-
-        let mut peer_task = tokio::spawn(async move { peer.run().await });
-
-        tokio::select! {
-            _ = (&mut peer_task) => {
-                ping_task.abort();
-            },
-            _ = (&mut ping_task) => {
-                peer_task.abort();
-            },
-        }
     }
 
-    pub async fn verify(
-        &mut self,
-        stream: &mut Box<dyn MessageStream>,
-        sink: &mut Box<dyn MessageSink>,
-    ) -> Result<LoginRequest> {
-        if let Some(Msg {
-            union: Some(Union::LoginReq(req)),
-        }) = stream.next_ms(1500).await?
-        {
-            if let Some(token) = self.cache.get_user_token(req.user_id).await? {
-                if token != req.token {
-                    let e = ErrorKind::UseTokenInvaild;
-                    sink.send_msg(&login_res(LoginResponseState::Fail, Some(e.to_string())))
-                        .await?;
-                    return Err(e.into());
-                } else {
-                    sink.send_msg(&login_res(LoginResponseState::Success, None))
-                        .await?;
-                    return Ok(req);
+    pub async fn start_recv_loop(&mut self) {
+        let mut stream = self.stream.lock().await.take().unwrap();
+        let sink = self.sink.clone();
+
+        self.tasks.spawn(async move {
+            while let Ok(Some(msg)) = stream.next_msg().await {
+                // 处理消息
+                match msg.union.unwrap() {
+                    Union::Ping(_) => {
+                        if let Err(e) = sink.lock().await.send_msg(&pong()).await {
+                            tracing::error!("reply ping error : {:?}", e);
+                            break;
+                        }
+                    }
+                    Union::Pong(_) => {
+                        tracing::debug!("received pong message");
+                    }
+                    Union::ChatMsg(msg) => {
+                        tracing::debug!("received message: {:#?}", msg);
+                    }
+                    _ => {
+                        //todo
+                    }
                 }
-            } else {
-                let e = ErrorKind::UseNotLogin;
-                sink.send_msg(&login_res(LoginResponseState::Fail, Some(e.to_string())))
-                    .await?;
-                return Err(e.into());
             }
-        } else {
-            let e = ErrorKind::MsgInvaild;
-            sink.send_msg(&login_res(LoginResponseState::Fail, Some(e.to_string())))
-                .await?;
-
-            return Err(e.into());
-        };
+        });
     }
+}
 
-    pub async fn handle_message(&mut self, message: Box<dyn Message>) -> Result<()> {
-        let (mut stream, mut sink) = message.split();
-
-        let req = self.verify(&mut stream, &mut sink).await?;
-
-        self.start_client(
-            req.user_id,
-            Platfrom::try_from(req.platfrom).unwrap(),
-            stream,
-            sink,
-        )
-        .await;
-
-        Ok(())
-    }
-
+impl Manager {
     pub async fn new(config: &Config, chat_msg_sender: ChatMsgSender) -> Self {
         let cache = get_cache(&config);
 
@@ -226,20 +231,31 @@ impl Manager {
         }
     }
 
-    pub fn add_sink(
-        &self,
-        user_id: UserId,
-        platform: Platfrom,
-        sink: Arc<RwLock<Box<dyn MessageSink>>>,
-    ) {
-        if let Some(mut client) = self.hub.get_mut(&&user_id) {
-            client.sinks.insert(platform, sink);
+    pub async fn handle_message(&mut self, message: Box<dyn Message>) -> Result<()> {
+        let mut peer_conn =
+            PeerConn::new(self.cache.clone(), self.chat_msg_sender.clone(), message);
+
+        peer_conn.do_handshake().await?;
+
+        self.add_peer_conn(peer_conn).await;
+
+        Ok(())
+    }
+
+    pub async fn add_peer_conn(&self, mut peer_conn: PeerConn) {
+        peer_conn.start_ping_pong().await;
+        peer_conn.start_recv_loop().await;
+
+        let user_id = peer_conn.user_id;
+
+        if let Some(mut client) = self.hub.get_mut(&user_id) {
+            client.peers.insert(peer_conn.platform, peer_conn);
         } else {
-            let mut sinks = HashMap::default();
+            let mut peers = HashMap::default();
 
-            sinks.insert(platform, sink);
+            peers.insert(peer_conn.platform, peer_conn);
 
-            self.hub.insert(user_id, Client { user_id, sinks });
+            self.hub.insert(user_id, Client { user_id, peers });
         }
     }
 
@@ -272,10 +288,8 @@ impl Manager {
     }
 
     async fn send_msg_to_clients(&self, clients: &Client, msg: &ChatMsg) {
-        for (_, sink) in clients.sinks.iter() {
-            let mut sink = sink.write().await;
-
-            if let Err(e) = sink.send_chat_msg(msg).await {
+        for (_, peer) in clients.peers.iter() {
+            if let Err(e) = peer.send_chat_msg(msg).await {
                 tracing::error!("msg send error: {:?}", e);
             }
         }
