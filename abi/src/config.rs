@@ -17,9 +17,19 @@ impl TraceLevel {
     }
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct LogConfig {
     pub level: TraceLevel,
+    pub filter: String,
+}
+
+impl Default for LogConfig {
+    fn default() -> Self {
+        LogConfig {
+            level: TraceLevel::Debug,
+            filter: "abi=error".to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
