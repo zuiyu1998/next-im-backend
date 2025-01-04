@@ -27,7 +27,7 @@ impl Default for LogConfig {
     fn default() -> Self {
         LogConfig {
             level: TraceLevel::Debug,
-            filter: "abi=error".to_string(),
+            filter: "info,api=debug,abi=debug,msg_gateway=debug,msg-server=debug".to_string(),
         }
     }
 }
@@ -205,7 +205,7 @@ impl ServiceCenterConfig {
 impl Default for ServiceCenterConfig {
     fn default() -> Self {
         Self {
-            ip: "127.0.0.1".to_owned(),
+            ip: "192.168.0.230".to_owned(),
             port: 8848,
             teant: "next-im".to_owned(),
         }

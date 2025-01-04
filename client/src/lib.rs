@@ -3,7 +3,7 @@ mod error;
 use std::{
     sync::{Arc, OnceLock},
     time::Duration,
-};                                                                                                                                                                                                                              
+};
 
 use abi::{
     config::{ApiConfig, Config},
@@ -86,6 +86,7 @@ impl PeerConn {
         let cloned_tx = self.sink.clone();
 
         self.tasks.spawn(async move {
+            tracing::info!("ping pong start");
             loop {
                 if let Err(e) = cloned_tx.lock().await.send_msg(&ping()).await {
                     tracing::error!("send ping error: {:?}", e);
@@ -93,6 +94,7 @@ impl PeerConn {
                 }
                 tokio::time::sleep(Duration::from_secs(30)).await;
             }
+            tracing::info!("ping pong end");
         });
     }
 
@@ -101,6 +103,8 @@ impl PeerConn {
         let sink = self.sink.clone();
 
         self.tasks.spawn(async move {
+            tracing::info!("recv msg start");
+
             while let Ok(Some(msg)) = stream.next_msg().await {
                 // 处理消息
                 match msg.union.unwrap() {
@@ -121,6 +125,8 @@ impl PeerConn {
                     }
                 }
             }
+
+            tracing::info!("recv msg end");
         });
     }
 
